@@ -3,1351 +3,644 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Chefly — Cook smarter with what you have</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <title>Chefly — Cook Smarter With What You Have</title>
+  <meta name="description" content="Chefly is your AI-powered recipe assistant. Enter the ingredients you have and get 5 personalised recipes instantly." />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --orange:        #E8650A;
-      --orange-light:  #FF8533;
-      --orange-pale:   #FFF0E0;
-      --cream:         #FFF8F0;
-      --charcoal:      #1A1A1A;
-      --gray:          #6B7280;
-      --gray-light:    #F3F4F6;
-      --white:         #FFFFFF;
-      --green:         #22C55E;
-      --red:           #EF4444;
-      --radius:        16px;
-      --shadow:        0 4px 24px rgba(232,101,10,.10);
-      --shadow-lg:     0 8px 40px rgba(232,101,10,.18);
-      --transition:    0.35s cubic-bezier(.4,0,.2,1);
+      --orange:       #E8650A;
+      --orange-light: #FF8533;
+      --orange-pale:  #FFF0E0;
+      --cream:        #FFF8F0;
+      --charcoal:     #1A1A1A;
+      --gray:         #6B7280;
+      --gray-light:   #F3F4F6;
+      --white:        #FFFFFF;
+      --green:        #22C55E;
+      --radius:       16px;
+      --shadow:       0 4px 24px rgba(232,101,10,.12);
+      --shadow-lg:    0 12px 48px rgba(232,101,10,.18);
     }
-
     html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; background: var(--white); color: var(--charcoal); overflow-x: hidden; }
 
-    body {
-      font-family: 'Inter', sans-serif;
-      background: var(--cream);
-      color: var(--charcoal);
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-
-    body::before {
-      content: '';
-      position: fixed; inset: 0;
-      background-image:
-        radial-gradient(circle at 15% 20%, rgba(232,101,10,.06) 0%, transparent 50%),
-        radial-gradient(circle at 85% 80%, rgba(232,101,10,.06) 0%, transparent 50%);
-      pointer-events: none; z-index: 0;
-    }
-
-    .bg-doodles {
-      position: fixed; inset: 0;
-      pointer-events: none; z-index: 0;
-      overflow: hidden; opacity: .045;
-    }
-
-    /* ── Screens ── */
-    .screen {
-      position: relative; z-index: 1;
-      min-height: 100vh;
-      display: none; flex-direction: column;
-      align-items: center; justify-content: center;
-      padding: 32px 16px;
-      animation: screenIn var(--transition) both;
-    }
-    .screen.active { display: flex; }
-    @keyframes screenIn {
-      from { opacity: 0; transform: translateY(18px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    /* ── Logo ── */
-    .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-    .logo-icon {
-      width: 48px; height: 48px; background: var(--orange);
-      border-radius: 14px; display: flex; align-items: center; justify-content: center;
-      font-size: 26px; box-shadow: 0 4px 16px rgba(232,101,10,.35);
-    }
-    .logo-text {
-      font-family: 'Playfair Display', serif; font-size: 2.2rem;
-      font-weight: 700; color: var(--orange); letter-spacing: -.5px;
-    }
-    .tagline {
-      font-size: 1.05rem; color: var(--gray); margin-bottom: 40px;
-      font-style: italic; font-family: 'Playfair Display', serif;
-    }
-
-    /* ── Card ── */
-    .card {
-      background: var(--white); border-radius: var(--radius);
-      box-shadow: var(--shadow); padding: 36px 32px;
-      width: 100%; max-width: 560px;
-    }
-    .card h2 {
-      font-family: 'Playfair Display', serif; font-size: 1.5rem;
-      font-weight: 600; margin-bottom: 6px;
-    }
-    .card .sub { font-size: .9rem; color: var(--gray); margin-bottom: 24px; }
-
-    /* ── Tag input ── */
-    .tag-input-wrap {
-      border: 2px solid #E5E7EB; border-radius: 12px;
-      padding: 10px 12px; display: flex; flex-wrap: wrap; gap: 8px;
-      cursor: text; transition: border-color var(--transition); min-height: 56px;
-    }
-    .tag-input-wrap:focus-within { border-color: var(--orange); }
-    .tag {
-      background: var(--orange-pale); color: var(--orange);
-      border: 1.5px solid rgba(232,101,10,.25); border-radius: 999px;
-      padding: 4px 10px 4px 14px; font-size: .85rem; font-weight: 500;
-      display: flex; align-items: center; gap: 6px;
-      animation: tagIn .2s ease both;
-    }
-    @keyframes tagIn {
-      from { opacity: 0; transform: scale(.8); }
-      to   { opacity: 1; transform: scale(1); }
-    }
-    .tag button {
-      background: none; border: none; cursor: pointer; color: var(--orange);
-      font-size: 1rem; line-height: 1; padding: 0; display: flex;
-      align-items: center; opacity: .7; transition: opacity .2s;
-    }
-    .tag button:hover { opacity: 1; }
-    #ingredient-input {
-      border: none; outline: none; font-family: 'Inter', sans-serif;
-      font-size: .95rem; background: transparent; flex: 1; min-width: 120px; color: var(--charcoal);
-    }
-    .input-hint { font-size: .78rem; color: var(--gray); margin-top: 8px; }
-
-    /* ── Buttons ── */
-    .btn {
-      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-      padding: 13px 28px; border-radius: 999px; font-family: 'Inter', sans-serif;
-      font-size: .95rem; font-weight: 600; cursor: pointer; border: none;
-      transition: all var(--transition);
-    }
-    .btn-primary {
-      background: var(--orange); color: var(--white);
-      box-shadow: 0 4px 16px rgba(232,101,10,.35);
-    }
-    .btn-primary:hover:not(:disabled) {
-      background: var(--orange-light); transform: translateY(-2px);
-      box-shadow: 0 6px 24px rgba(232,101,10,.45);
-    }
-    .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
-    .btn-secondary { background: var(--gray-light); color: var(--charcoal); }
-    .btn-secondary:hover { background: #E5E7EB; }
-    .btn-green { background: var(--green); color: white; box-shadow: 0 4px 16px rgba(34,197,94,.3); }
-    .btn-green:hover { background: #16A34A; transform: translateY(-2px); }
-    .btn-full { width: 100%; margin-top: 20px; }
-
-    /* ── Cuisine cards ── */
-    .cuisine-grid {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;
-    }
-    .cuisine-card {
-      border: 2px solid #E5E7EB; border-radius: 12px; padding: 16px 12px;
-      text-align: center; cursor: pointer; transition: all var(--transition); background: var(--white);
-    }
-    .cuisine-card:hover { border-color: var(--orange); transform: translateY(-3px); box-shadow: var(--shadow); }
-    .cuisine-card.selected {
-      border-color: var(--orange); background: var(--orange-pale);
-      box-shadow: 0 0 0 3px rgba(232,101,10,.15);
-    }
-    .cuisine-flag { font-size: 2rem; margin-bottom: 6px; display: block; }
-    .cuisine-name { font-size: .82rem; font-weight: 500; color: var(--charcoal); }
-    .cuisine-card.surprise {
-      grid-column: span 3; display: flex; align-items: center;
-      justify-content: center; gap: 10px; padding: 14px;
-    }
-    .cuisine-card.surprise .cuisine-flag { font-size: 1.4rem; margin: 0; }
-    .cuisine-card.surprise .cuisine-name { font-size: .9rem; }
-
-    /* ── Healthy toggle ── */
-    .healthy-toggle {
-      display: flex; align-items: center; gap: 12px; padding: 14px 16px;
-      border: 2px solid #E5E7EB; border-radius: 12px; cursor: pointer;
-      transition: all var(--transition); margin-bottom: 16px;
-      background: var(--white); user-select: none;
-    }
-    .healthy-toggle:hover { border-color: var(--green); }
-    .healthy-toggle.active { border-color: var(--green); background: #F0FDF4; box-shadow: 0 0 0 3px rgba(34,197,94,.12); }
-    .healthy-toggle-icon { font-size: 1.5rem; }
-    .healthy-toggle-text { flex: 1; }
-    .healthy-toggle-text strong { display: block; font-size: .9rem; color: var(--charcoal); }
-    .healthy-toggle-text span   { font-size: .78rem; color: var(--gray); }
-    .toggle-switch {
-      width: 42px; height: 24px; border-radius: 999px; background: #E5E7EB;
-      position: relative; transition: background var(--transition); flex-shrink: 0;
-    }
-    .healthy-toggle.active .toggle-switch { background: var(--green); }
-    .toggle-switch::after {
-      content: ''; position: absolute; top: 3px; left: 3px;
-      width: 18px; height: 18px; border-radius: 50%; background: white;
-      box-shadow: 0 1px 4px rgba(0,0,0,.2); transition: transform var(--transition);
-    }
-    .healthy-toggle.active .toggle-switch::after { transform: translateX(18px); }
-
-    /* ── Recipe cards ── */
-    .recipes-header { text-align: center; margin-bottom: 28px; }
-    .recipes-header h1 { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700; }
-    .recipes-header p  { color: var(--gray); font-size: .9rem; margin-top: 4px; }
-
-    .recipes-grid { display: grid; gap: 16px; width: 100%; max-width: 680px; }
-
-    .recipe-card {
-      background: var(--white); border-radius: var(--radius); padding: 22px 24px;
-      box-shadow: var(--shadow); cursor: pointer; transition: all var(--transition);
-      border: 2px solid transparent; opacity: 0; transform: translateY(20px);
-      animation: cardIn .4s ease forwards;
-    }
-    .recipe-card:hover { transform: translateY(-4px) !important; box-shadow: var(--shadow-lg); border-color: var(--orange); }
-    @keyframes cardIn { to { opacity: 1; transform: translateY(0); } }
-
-    .recipe-card-top {
-      display: flex; align-items: flex-start; justify-content: space-between;
-      gap: 12px; margin-bottom: 8px;
-    }
-    .recipe-name-row { display: flex; align-items: flex-start; gap: 8px; flex: 1; }
-    .recipe-name {
-      font-family: 'Playfair Display', serif; font-size: 1.15rem;
-      font-weight: 600; line-height: 1.3; flex: 1;
-    }
-    .recipe-card-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-    .recipe-flag { font-size: 1.4rem; }
-
-    /* Heart / favourite button */
-    .heart-btn {
-      background: none; border: none; cursor: pointer; font-size: 1.3rem;
-      line-height: 1; padding: 2px; transition: transform .2s;
-      filter: grayscale(1); opacity: .4;
-    }
-    .heart-btn:hover { transform: scale(1.25); filter: none; opacity: 1; }
-    .heart-btn.active { filter: none; opacity: 1; animation: heartPop .3s ease; }
-    @keyframes heartPop {
-      0%   { transform: scale(1); }
-      50%  { transform: scale(1.5); }
-      100% { transform: scale(1); }
-    }
-
-    .recipe-desc { font-size: .88rem; color: var(--gray); line-height: 1.55; margin-bottom: 14px; }
-    .recipe-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-
-    .badge { font-size: .75rem; font-weight: 600; padding: 3px 10px; border-radius: 999px; }
-    .badge-easy   { background: #DCFCE7; color: #15803D; }
-    .badge-medium { background: #FEF3C7; color: #B45309; }
-    .badge-hard   { background: #FEE2E2; color: #B91C1C; }
-    .badge-healthy { background: #DCFCE7; color: #15803D; font-size: .72rem; font-weight: 700; padding: 3px 9px; border-radius: 999px; display: inline-flex; align-items: center; gap: 3px; }
-
-    .meta-item { font-size: .8rem; color: var(--gray); display: flex; align-items: center; gap: 4px; }
-
-    .match-bar-wrap { margin-top: 12px; }
-    .match-label { display: flex; justify-content: space-between; font-size: .75rem; color: var(--gray); margin-bottom: 4px; }
-    .match-bar { height: 6px; background: #E5E7EB; border-radius: 999px; overflow: hidden; }
-    .match-fill {
-      height: 100%; border-radius: 999px;
-      background: linear-gradient(90deg, var(--orange), var(--orange-light));
-      transition: width 1s cubic-bezier(.4,0,.2,1);
-    }
-
-    /* Nutrition strip */
-    .nutrition-strip { display: flex; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1.5px solid #F3F4F6; }
-    .nutrition-pill {
-      display: flex; align-items: center; gap: 5px; background: #F9FAFB;
-      border: 1.5px solid #E5E7EB; border-radius: 8px; padding: 5px 10px;
-      font-size: .78rem; font-weight: 500; flex: 1; justify-content: center;
-    }
-    .nutrition-pill .nut-val   { font-weight: 700; }
-    .nutrition-pill .nut-label { color: var(--gray); font-size: .72rem; }
-    .nutrition-pill.calories { border-color: #FED7AA; background: #FFF7ED; }
-    .nutrition-pill.calories .nut-val { color: var(--orange); }
-    .nutrition-pill.protein  { border-color: #BBF7D0; background: #F0FDF4; }
-    .nutrition-pill.protein  .nut-val { color: #15803D; }
-
-    /* ── Detail screen ── */
-    .detail-wrap { width: 100%; max-width: 640px; }
-    .back-btn {
-      display: inline-flex; align-items: center; gap: 6px; font-size: .88rem;
-      font-weight: 500; color: var(--orange); cursor: pointer; background: none;
-      border: none; padding: 0; margin-bottom: 20px; transition: gap var(--transition);
-    }
-    .back-btn:hover { gap: 10px; }
-
-    .detail-card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow-lg); overflow: hidden; }
-    .detail-hero {
-      background: linear-gradient(135deg, var(--orange) 0%, #FF9A4D 100%);
-      padding: 36px 32px 28px; color: white; position: relative;
-    }
-    .detail-hero-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
-    .detail-cuisine-flag { font-size: 1.6rem; }
-    .detail-cuisine-name { font-size: .85rem; font-weight: 500; opacity: .9; text-transform: uppercase; letter-spacing: .5px; }
-    .detail-title { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; line-height: 1.2; margin-bottom: 10px; }
-    .detail-desc  { font-size: .95rem; opacity: .9; line-height: 1.6; margin-bottom: 20px; }
-    .detail-badges { display: flex; gap: 10px; flex-wrap: wrap; }
-    .detail-badge {
-      background: rgba(255,255,255,.22); color: white; font-size: .8rem;
-      font-weight: 600; padding: 5px 14px; border-radius: 999px; backdrop-filter: blur(4px);
-    }
-
-    /* Heart on detail hero */
-    .detail-heart-btn {
-      position: absolute; top: 20px; right: 20px;
-      background: rgba(255,255,255,.2); border: none; border-radius: 50%;
-      width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
-      font-size: 1.3rem; cursor: pointer; backdrop-filter: blur(4px);
-      transition: all .2s; filter: grayscale(1);
-    }
-    .detail-heart-btn:hover { background: rgba(255,255,255,.35); transform: scale(1.1); }
-    .detail-heart-btn.active { filter: none; animation: heartPop .3s ease; }
-
-    .detail-body { padding: 28px 32px; }
-
-    /* Nutrition panel */
-    .nutrition-panel { display: flex; gap: 12px; margin-bottom: 20px; }
-    .nut-card { flex: 1; border-radius: 12px; padding: 16px 14px; text-align: center; }
-    .nut-card.cal { background: #FFF7ED; border: 1.5px solid #FED7AA; }
-    .nut-card.pro { background: #F0FDF4; border: 1.5px solid #BBF7D0; }
-    .nut-card .nut-big  { font-size: 1.6rem; font-weight: 700; display: block; }
-    .nut-card.cal .nut-big { color: var(--orange); }
-    .nut-card.pro .nut-big { color: #15803D; }
-    .nut-card .nut-unit { font-size: .78rem; color: var(--gray); }
-    .nut-card .nut-lbl  { font-size: .82rem; font-weight: 600; color: var(--charcoal); margin-top: 2px; display: block; }
-
-    /* Serving scaler */
-    .serving-scaler {
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(255,255,255,.92); backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(232,101,10,.08);
+      padding: 0 40px; height: 68px;
       display: flex; align-items: center; justify-content: space-between;
-      background: #F9FAFB; border: 1.5px solid #E5E7EB; border-radius: 12px;
-      padding: 12px 16px; margin-bottom: 20px;
+      transition: box-shadow .3s;
     }
-    .serving-label { font-size: .88rem; font-weight: 600; color: var(--charcoal); }
-    .serving-label span { color: var(--gray); font-weight: 400; font-size: .8rem; }
-    .serving-controls { display: flex; align-items: center; gap: 12px; }
-    .serving-btn {
-      width: 32px; height: 32px; border-radius: 50%; border: 2px solid #E5E7EB;
-      background: var(--white); cursor: pointer; font-size: 1.1rem; font-weight: 700;
+    nav.scrolled { box-shadow: 0 2px 20px rgba(0,0,0,.08); }
+    .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .nav-logo-icon {
+      width: 38px; height: 38px; background: var(--orange); border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; font-size: 20px;
+      box-shadow: 0 3px 10px rgba(232,101,10,.35);
+    }
+    .nav-logo-text { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; color: var(--orange); }
+    .nav-links { display: flex; align-items: center; gap: 32px; }
+    .nav-links a { text-decoration: none; font-size: .9rem; font-weight: 500; color: var(--gray); transition: color .2s; }
+    .nav-links a:hover { color: var(--orange); }
+    .nav-cta {
+      background: var(--orange); color: white; padding: 9px 22px; border-radius: 999px;
+      text-decoration: none; font-size: .88rem; font-weight: 600;
+      box-shadow: 0 3px 12px rgba(232,101,10,.35); transition: all .2s;
+    }
+    .nav-cta:hover { background: var(--orange-light); transform: translateY(-1px); color: white; }
+    .nav-hamburger { display: none; background: none; border: none; cursor: pointer; font-size: 1.4rem; }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh; padding: 120px 40px 80px;
       display: flex; align-items: center; justify-content: center;
-      transition: all .2s; color: var(--charcoal);
+      position: relative; overflow: hidden;
+      background: linear-gradient(160deg, #FFF8F0 0%, #FFFFFF 50%, #FFF3E8 100%);
     }
-    .serving-btn:hover { border-color: var(--orange); color: var(--orange); transform: scale(1.1); }
-    .serving-btn:disabled { opacity: .3; cursor: not-allowed; transform: none; }
-    .serving-count { font-size: 1.1rem; font-weight: 700; color: var(--charcoal); min-width: 24px; text-align: center; }
+    .hero-bg {
+      position: absolute; inset: 0; pointer-events: none; overflow: hidden;
+    }
+    .hero-blob {
+      position: absolute; border-radius: 50%;
+      filter: blur(80px); opacity: .3;
+    }
+    .hero-blob-1 { width: 600px; height: 600px; background: #FFCFA0; top: -100px; right: -100px; }
+    .hero-blob-2 { width: 400px; height: 400px; background: #FFE4CC; bottom: -80px; left: -80px; }
+    .hero-blob-3 { width: 300px; height: 300px; background: #FFA95A; top: 40%; left: 40%; }
 
-    /* Shopping list */
-    .shopping-section { margin-bottom: 20px; }
-    .shopping-header {
-      display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
+    .hero-inner {
+      position: relative; z-index: 1; display: grid;
+      grid-template-columns: 1fr 1fr; gap: 80px; align-items: center;
+      max-width: 1200px; width: 100%;
     }
-    .shopping-title {
-      font-family: 'Playfair Display', serif; font-size: 1.05rem; font-weight: 600;
-      display: flex; align-items: center; gap: 6px;
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px;
+      background: var(--orange-pale); border: 1.5px solid rgba(232,101,10,.3);
+      border-radius: 999px; font-size: .8rem; font-weight: 600; color: var(--orange);
+      margin-bottom: 24px;
     }
-    .copy-list-btn {
-      display: inline-flex; align-items: center; gap: 5px; font-size: .78rem;
-      font-weight: 600; padding: 5px 12px; border-radius: 999px; border: none; cursor: pointer;
-      background: var(--orange-pale); color: var(--orange); transition: all .2s;
-    }
-    .copy-list-btn:hover { background: var(--orange); color: white; }
-    .copy-list-btn.copied { background: #DCFCE7; color: #15803D; }
+    .hero-badge .dot { width: 6px; height: 6px; background: var(--orange); border-radius: 50%; animation: blink 1.5s ease-in-out infinite; }
+    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
 
-    .shopping-items { display: flex; flex-wrap: wrap; gap: 8px; }
-    .shopping-item {
-      display: flex; align-items: center; gap: 5px; padding: 5px 12px;
-      border-radius: 8px; font-size: .82rem; font-weight: 500;
-      border: 1.5px solid;
+    .hero-title {
+      font-family: 'Playfair Display', serif; font-size: 3.6rem; font-weight: 900;
+      line-height: 1.1; color: var(--charcoal); margin-bottom: 20px;
     }
-    .shopping-item.have   { background: #F0FDF4; border-color: #BBF7D0; color: #15803D; }
-    .shopping-item.need   { background: #FEF2F2; border-color: #FCA5A5; color: #B91C1C; }
-    .shopping-empty { font-size: .85rem; color: #15803D; display: flex; align-items: center; gap: 5px; }
+    .hero-title span { color: var(--orange); font-style: italic; }
+    .hero-sub { font-size: 1.1rem; color: var(--gray); line-height: 1.7; margin-bottom: 36px; max-width: 480px; }
 
-    /* Share row */
-    .action-row { display: flex; gap: 10px; margin-bottom: 24px; }
-    .watch-btn {
-      flex: 2; display: flex; align-items: center; justify-content: center; gap: 10px;
-      padding: 14px 20px; background: #FF0000; color: white; border: none; border-radius: 12px;
-      font-family: 'Inter', sans-serif; font-size: .9rem; font-weight: 600;
-      cursor: pointer; text-decoration: none; transition: all var(--transition);
+    .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; }
+    .btn-hero-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--orange); color: white; padding: 15px 30px;
+      border-radius: 999px; font-weight: 700; font-size: 1rem; text-decoration: none;
+      box-shadow: 0 6px 24px rgba(232,101,10,.4); transition: all .25s;
     }
-    .watch-btn:hover { background: #CC0000; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,0,0,.35); }
-    .share-btn {
-      flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px;
-      padding: 14px 16px; background: var(--gray-light); color: var(--charcoal);
-      border: none; border-radius: 12px; font-family: 'Inter', sans-serif; font-size: .9rem;
-      font-weight: 600; cursor: pointer; transition: all var(--transition);
+    .btn-hero-primary:hover { background: var(--orange-light); transform: translateY(-3px); box-shadow: 0 10px 32px rgba(232,101,10,.5); color: white; }
+    .btn-hero-secondary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: white; color: var(--charcoal); padding: 15px 30px;
+      border-radius: 999px; font-weight: 600; font-size: 1rem; text-decoration: none;
+      border: 2px solid #E5E7EB; transition: all .25s;
     }
-    .share-btn:hover { background: #E5E7EB; transform: translateY(-2px); }
-    .share-btn.copied { background: #DCFCE7; color: #15803D; }
+    .btn-hero-secondary:hover { border-color: var(--orange); color: var(--orange); transform: translateY(-2px); }
 
-    /* Steps */
-    .steps-title { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-    .step-item {
-      display: flex; gap: 14px; margin-bottom: 14px; padding: 14px 16px;
-      border-radius: 12px; border: 1.5px solid #F3F4F6; transition: all var(--transition);
-      cursor: pointer; animation: cardIn .3s ease both;
-    }
-    .step-item:hover { border-color: var(--orange); background: var(--orange-pale); }
-    .step-item.done { opacity: .5; background: #F9FAFB; }
-    .step-item.done .step-text { text-decoration: line-through; }
-    .step-num {
-      width: 28px; height: 28px; border-radius: 50%; background: var(--orange);
-      color: white; font-size: .8rem; font-weight: 700; display: flex; align-items: center;
-      justify-content: center; flex-shrink: 0; margin-top: 1px;
-    }
-    .step-item.done .step-num { background: var(--gray); }
-    .step-text { font-size: .92rem; line-height: 1.6; color: var(--charcoal); }
+    .hero-stats { display: flex; gap: 32px; margin-top: 44px; }
+    .stat { }
+    .stat-num { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700; color: var(--orange); }
+    .stat-label { font-size: .78rem; color: var(--gray); margin-top: 2px; }
 
-    /* ── My Cookbook (Screen 5) ── */
-    .cookbook-header { text-align: center; margin-bottom: 28px; }
-    .cookbook-header h1 { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700; }
-    .cookbook-header p  { color: var(--gray); font-size: .9rem; margin-top: 4px; }
-    .cookbook-grid { display: grid; gap: 14px; width: 100%; max-width: 680px; }
-    .cookbook-card {
-      background: var(--white); border-radius: var(--radius); padding: 18px 20px;
-      box-shadow: var(--shadow); border: 2px solid transparent;
-      display: flex; align-items: center; gap: 14px;
-      animation: cardIn .3s ease both;
+    /* Hero visual */
+    .hero-visual { position: relative; }
+    .hero-phone {
+      background: white; border-radius: 28px; box-shadow: 0 20px 80px rgba(0,0,0,.15);
+      overflow: hidden; border: 8px solid white;
+      outline: 1px solid rgba(0,0,0,.08); transform: rotate(2deg);
+      animation: float 5s ease-in-out infinite;
     }
-    .cookbook-card:hover { border-color: var(--orange); box-shadow: var(--shadow-lg); }
-    .cookbook-flag { font-size: 2rem; flex-shrink: 0; }
-    .cookbook-info { flex: 1; min-width: 0; }
-    .cookbook-name { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .cookbook-meta { display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
-    .cookbook-meta span { font-size: .75rem; color: var(--gray); }
-    .cookbook-actions { display: flex; gap: 8px; flex-shrink: 0; }
-    .cookbook-cook-btn {
-      padding: 7px 14px; background: var(--orange); color: white; border: none;
-      border-radius: 999px; font-size: .8rem; font-weight: 600; cursor: pointer;
-      transition: all .2s;
+    @keyframes float { 0%,100% { transform: rotate(2deg) translateY(0); } 50% { transform: rotate(2deg) translateY(-12px); } }
+    .phone-header { background: var(--orange); padding: 20px 20px 16px; color: white; }
+    .phone-header-logo { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; }
+    .phone-header-sub  { font-size: .7rem; opacity: .8; margin-top: 2px; }
+    .phone-body { padding: 16px; background: var(--cream); }
+    .phone-card {
+      background: white; border-radius: 12px; padding: 14px;
+      box-shadow: 0 2px 12px rgba(232,101,10,.08); margin-bottom: 10px;
     }
-    .cookbook-cook-btn:hover { background: var(--orange-light); }
-    .cookbook-remove-btn {
-      padding: 7px 10px; background: var(--gray-light); color: var(--gray); border: none;
-      border-radius: 999px; font-size: .8rem; cursor: pointer; transition: all .2s;
-    }
-    .cookbook-remove-btn:hover { background: #FEE2E2; color: var(--red); }
-    .cookbook-empty {
-      text-align: center; padding: 60px 20px; color: var(--gray);
-    }
-    .cookbook-empty .empty-icon { font-size: 3rem; margin-bottom: 12px; }
-    .cookbook-empty p { font-size: .9rem; }
+    .phone-recipe-name { font-family: 'Playfair Display', serif; font-size: .95rem; font-weight: 600; margin-bottom: 4px; }
+    .phone-recipe-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+    .phone-chip { font-size: .62rem; padding: 2px 7px; border-radius: 999px; font-weight: 600; }
+    .phone-chip.easy { background: #DCFCE7; color: #15803D; }
+    .phone-chip.time { background: var(--orange-pale); color: var(--orange); }
+    .phone-chip.cal  { background: #FFF7ED; color: var(--orange); }
+    .phone-bar { height: 4px; background: #F3F4F6; border-radius: 999px; overflow: hidden; }
+    .phone-bar-fill { height: 100%; background: linear-gradient(90deg, var(--orange), var(--orange-light)); border-radius: 999px; }
+    .phone-nut { display: flex; gap: 6px; margin-top: 8px; }
+    .phone-nut-pill { flex: 1; text-align: center; padding: 4px; border-radius: 6px; font-size: .6rem; font-weight: 600; }
+    .phone-nut-pill.cal-pill { background: #FFF7ED; color: var(--orange); }
+    .phone-nut-pill.pro-pill { background: #F0FDF4; color: #15803D; }
 
-    /* ── Loaders ── */
-    .loader-wrap {
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 24px; min-height: 300px;
+    .hero-float-card {
+      position: absolute; background: white; border-radius: 14px;
+      padding: 12px 16px; box-shadow: 0 8px 32px rgba(0,0,0,.12);
+      font-size: .8rem; display: flex; align-items: center; gap: 10px;
     }
-    .chef-loader { position: relative; width: 80px; height: 80px; }
-    .chef-loader .ring {
-      position: absolute; inset: 0; border: 4px solid transparent;
-      border-top-color: var(--orange); border-radius: 50%; animation: spin 1s linear infinite;
-    }
-    .chef-loader .ring:nth-child(2) { inset: 10px; border-top-color: var(--orange-light); animation-duration: .7s; animation-direction: reverse; }
-    .chef-loader .emoji { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; animation: pulse 1.2s ease-in-out infinite; }
-    @keyframes spin  { to { transform: rotate(360deg); } }
-    @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.15); } }
-    .loader-text { font-family: 'Playfair Display', serif; font-size: 1.15rem; color: var(--orange); font-style: italic; text-align: center; }
-    .loader-sub  { font-size: .82rem; color: var(--gray); text-align: center; margin-top: -16px; }
+    .hero-float-card-1 { bottom: 30px; left: -40px; animation: float2 4s ease-in-out infinite; }
+    .hero-float-card-2 { top: 40px;   right: -30px; animation: float2 4s ease-in-out infinite .8s; }
+    @keyframes float2 { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+    .float-icon { font-size: 1.6rem; }
+    .float-text strong { display: block; font-size: .8rem; font-weight: 700; color: var(--charcoal); }
+    .float-text span   { font-size: .7rem; color: var(--gray); }
 
-    /* ── Error ── */
-    .error-box { background: #FEF2F2; border: 1.5px solid #FCA5A5; border-radius: 12px; padding: 20px; text-align: center; color: var(--red); }
-    .error-box p { font-size: .9rem; margin-bottom: 14px; }
+    /* ── SECTION SHARED ── */
+    section { padding: 100px 40px; }
+    .section-inner { max-width: 1200px; margin: 0 auto; }
+    .section-label {
+      display: inline-block; font-size: .78rem; font-weight: 700; letter-spacing: 1.5px;
+      text-transform: uppercase; color: var(--orange); margin-bottom: 12px;
+    }
+    .section-title {
+      font-family: 'Playfair Display', serif; font-size: 2.4rem;
+      font-weight: 700; line-height: 1.2; margin-bottom: 16px; color: var(--charcoal);
+    }
+    .section-title span { color: var(--orange); font-style: italic; }
+    .section-sub { font-size: 1rem; color: var(--gray); max-width: 560px; line-height: 1.7; }
 
-    /* ── API key modal ── */
-    .modal-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,.55);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 100; backdrop-filter: blur(4px); padding: 16px;
-    }
-    .modal-overlay.hidden { display: none; }
-    .modal {
-      background: var(--white); border-radius: var(--radius); padding: 36px 32px;
-      width: 100%; max-width: 460px; box-shadow: 0 24px 64px rgba(0,0,0,.25);
-    }
-    .modal h2 { font-family: 'Playfair Display', serif; font-size: 1.5rem; margin-bottom: 8px; }
-    .modal p  { font-size: .88rem; color: var(--gray); margin-bottom: 20px; line-height: 1.6; }
-    .modal input {
-      width: 100%; border: 2px solid #E5E7EB; border-radius: 10px; padding: 12px 14px;
-      font-family: 'Inter', sans-serif; font-size: .95rem; outline: none;
-      transition: border-color var(--transition); margin-bottom: 14px; color: var(--charcoal);
-    }
-    .modal input:focus { border-color: var(--orange); }
-    .modal-note { font-size: .78rem; color: var(--gray); margin-top: 10px; text-align: center; }
+    /* ── HOW IT WORKS ── */
+    .how-it-works { background: var(--charcoal); color: white; }
+    .how-it-works .section-title { color: white; }
+    .how-it-works .section-sub   { color: #9CA3AF; }
+    .how-it-works .section-label { color: #F97316; }
 
-    /* ── Toast ── */
-    .toast {
-      position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px);
-      background: var(--charcoal); color: white; padding: 10px 20px;
-      border-radius: 999px; font-size: .85rem; font-weight: 500; z-index: 200;
-      opacity: 0; transition: all .3s; white-space: nowrap; pointer-events: none;
+    .steps-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin-top: 60px;
+      position: relative;
     }
-    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .steps-grid::before {
+      content: ''; position: absolute; top: 32px; left: 10%; right: 10%; height: 2px;
+      background: linear-gradient(90deg, var(--orange), var(--orange-light));
+      z-index: 0;
+    }
+    .step-block { text-align: center; padding: 0 24px; position: relative; z-index: 1; }
+    .step-number {
+      width: 64px; height: 64px; border-radius: 50%; background: var(--orange);
+      color: white; font-size: 1.3rem; font-weight: 700; display: flex;
+      align-items: center; justify-content: center; margin: 0 auto 20px;
+      box-shadow: 0 4px 20px rgba(232,101,10,.5); font-family: 'Playfair Display', serif;
+    }
+    .step-emoji { font-size: 1.5rem; margin-bottom: 8px; display: block; }
+    .step-title { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 600; color: white; margin-bottom: 8px; }
+    .step-desc  { font-size: .83rem; color: #9CA3AF; line-height: 1.6; }
 
-    /* ── Progress dots ── */
-    .progress-dots { display: flex; gap: 8px; justify-content: center; margin-bottom: 28px; }
-    .dot { width: 8px; height: 8px; border-radius: 50%; background: #E5E7EB; transition: all var(--transition); }
-    .dot.active { background: var(--orange); width: 24px; border-radius: 4px; }
-    .dot.done   { background: var(--orange); opacity: .4; }
+    /* ── FEATURES ── */
+    .features { background: var(--cream); }
+    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 60px; }
+    .feature-card {
+      background: white; border-radius: 20px; padding: 32px 28px;
+      box-shadow: var(--shadow); border: 1.5px solid transparent;
+      transition: all .3s;
+    }
+    .feature-card:hover { border-color: var(--orange); transform: translateY(-6px); box-shadow: var(--shadow-lg); }
+    .feature-icon {
+      width: 56px; height: 56px; background: var(--orange-pale);
+      border-radius: 14px; display: flex; align-items: center; justify-content: center;
+      font-size: 1.6rem; margin-bottom: 20px;
+    }
+    .feature-title { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 600; margin-bottom: 10px; }
+    .feature-desc  { font-size: .88rem; color: var(--gray); line-height: 1.7; }
 
-    /* ── Floating buttons ── */
-    .fab-row {
-      position: fixed; bottom: 20px; right: 20px; z-index: 50;
-      display: flex; flex-direction: column; gap: 10px; align-items: flex-end;
+    /* ── CUISINES ── */
+    .cuisines { background: white; }
+    .cuisines-row { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-top: 50px; }
+    .cuisine-pill {
+      display: flex; align-items: center; gap: 10px; padding: 14px 24px;
+      border: 2px solid #E5E7EB; border-radius: 999px; cursor: default;
+      transition: all .25s; background: white;
     }
-    .fab {
-      width: 44px; height: 44px; border-radius: 50%; border: none; cursor: pointer;
-      font-size: 1.2rem; box-shadow: 0 4px 16px rgba(232,101,10,.4);
-      display: flex; align-items: center; justify-content: center; transition: transform .2s;
-    }
-    .fab:hover { transform: scale(1.1); }
-    .fab-key      { background: var(--orange); color: white; }
-    .fab-cookbook {
-      background: var(--white); color: var(--charcoal);
-      box-shadow: 0 4px 16px rgba(0,0,0,.12); position: relative;
-    }
-    .fab-cookbook-badge {
-      position: absolute; top: -4px; right: -4px; background: var(--orange); color: white;
-      border-radius: 50%; width: 18px; height: 18px; font-size: .65rem; font-weight: 700;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .fab-cookbook-badge.hidden { display: none; }
+    .cuisine-pill:hover { border-color: var(--orange); background: var(--orange-pale); transform: translateY(-3px); box-shadow: var(--shadow); }
+    .cuisine-pill .flag { font-size: 1.5rem; }
+    .cuisine-pill .name { font-size: .9rem; font-weight: 600; }
 
-    /* ── Responsive ── */
-    @media (max-width: 540px) {
-      .card { padding: 24px 18px; }
-      .detail-hero { padding: 28px 20px 22px; }
-      .detail-body { padding: 20px 18px; }
-      .detail-title { font-size: 1.5rem; }
-      .cuisine-grid { grid-template-columns: repeat(2, 1fr); }
-      .cuisine-card.surprise { grid-column: span 2; }
-      .nutrition-panel { flex-direction: column; gap: 8px; }
-      .action-row { flex-direction: column; }
-      .cookbook-card { flex-wrap: wrap; }
+    /* ── TESTIMONIALS ── */
+    .testimonials { background: var(--cream); }
+    .testi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 60px; }
+    .testi-card {
+      background: white; border-radius: 20px; padding: 28px;
+      box-shadow: var(--shadow); border-left: 4px solid var(--orange);
+    }
+    .testi-stars { color: #F59E0B; font-size: 1rem; margin-bottom: 14px; }
+    .testi-text  { font-size: .9rem; color: var(--charcoal); line-height: 1.7; font-style: italic; margin-bottom: 20px; }
+    .testi-author { display: flex; align-items: center; gap: 12px; }
+    .testi-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--orange), var(--orange-light));
+      display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;
+    }
+    .testi-name  { font-size: .88rem; font-weight: 600; }
+    .testi-role  { font-size: .75rem; color: var(--gray); }
+
+    /* ── CTA BAND ── */
+    .cta-band {
+      background: linear-gradient(135deg, var(--orange) 0%, #FF9A4D 100%);
+      padding: 100px 40px; text-align: center; position: relative; overflow: hidden;
+    }
+    .cta-band::before, .cta-band::after {
+      content: ''; position: absolute; border-radius: 50%;
+      background: rgba(255,255,255,.08);
+    }
+    .cta-band::before { width: 500px; height: 500px; top: -200px; right: -100px; }
+    .cta-band::after  { width: 300px; height: 300px; bottom: -100px; left: -50px; }
+    .cta-band h2 { font-family: 'Playfair Display', serif; font-size: 2.8rem; font-weight: 800; color: white; margin-bottom: 16px; position: relative; z-index: 1; }
+    .cta-band p  { font-size: 1.05rem; color: rgba(255,255,255,.85); max-width: 520px; margin: 0 auto 36px; line-height: 1.7; position: relative; z-index: 1; }
+    .btn-cta-white {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: white; color: var(--orange); padding: 16px 36px; border-radius: 999px;
+      font-weight: 700; font-size: 1rem; text-decoration: none; position: relative; z-index: 1;
+      box-shadow: 0 8px 32px rgba(0,0,0,.15); transition: all .25s;
+    }
+    .btn-cta-white:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,.2); color: var(--orange); }
+
+    /* ── FOOTER ── */
+    footer { background: var(--charcoal); color: white; padding: 60px 40px 30px; }
+    .footer-inner { max-width: 1200px; margin: 0 auto; }
+    .footer-top {
+      display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 60px; margin-bottom: 50px;
+    }
+    .footer-brand-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .footer-brand-icon { width: 36px; height: 36px; background: var(--orange); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .footer-brand-name { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 700; color: var(--orange); }
+    .footer-brand-desc { font-size: .85rem; color: #9CA3AF; line-height: 1.7; max-width: 260px; }
+    .footer-col h4 { font-size: .85rem; font-weight: 700; color: white; margin-bottom: 16px; letter-spacing: .5px; text-transform: uppercase; }
+    .footer-col ul { list-style: none; }
+    .footer-col ul li { margin-bottom: 10px; }
+    .footer-col ul li a { color: #9CA3AF; text-decoration: none; font-size: .85rem; transition: color .2s; }
+    .footer-col ul li a:hover { color: var(--orange); }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,.08); padding-top: 24px; display: flex; align-items: center; justify-content: space-between; }
+    .footer-copy  { font-size: .8rem; color: #6B7280; }
+    .footer-badge { font-size: .8rem; color: #6B7280; display: flex; align-items: center; gap: 6px; }
+    .footer-badge span { color: var(--orange); }
+
+    /* ── Mobile ── */
+    @media (max-width: 1024px) {
+      .hero-inner     { grid-template-columns: 1fr; gap: 60px; text-align: center; }
+      .hero-title     { font-size: 2.8rem; }
+      .hero-sub       { margin: 0 auto 36px; }
+      .hero-actions   { justify-content: center; }
+      .hero-stats     { justify-content: center; }
+      .hero-visual    { display: none; }
+      .steps-grid     { grid-template-columns: repeat(2, 1fr); gap: 40px; }
+      .steps-grid::before { display: none; }
+      .features-grid  { grid-template-columns: repeat(2, 1fr); }
+      .testi-grid     { grid-template-columns: 1fr; }
+      .footer-top     { grid-template-columns: 1fr 1fr; gap: 40px; }
+    }
+    @media (max-width: 640px) {
+      section { padding: 70px 20px; }
+      nav     { padding: 0 20px; }
+      .nav-links  { display: none; }
+      .nav-hamburger { display: block; }
+      .hero   { padding: 100px 20px 60px; }
+      .hero-title { font-size: 2.2rem; }
+      .section-title { font-size: 1.8rem; }
+      .steps-grid    { grid-template-columns: 1fr; }
+      .features-grid { grid-template-columns: 1fr; }
+      .footer-top    { grid-template-columns: 1fr; gap: 30px; }
+      .footer-bottom { flex-direction: column; gap: 10px; text-align: center; }
+      .cta-band h2   { font-size: 2rem; }
+      .cuisines-row  { gap: 10px; }
     }
   </style>
 </head>
 <body>
 
-<!-- Background doodles -->
-<svg class="bg-doodles" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
-  <text x="60"   y="120" font-size="72" fill="#E8650A">🍳</text>
-  <text x="1300" y="200" font-size="60" fill="#E8650A">🥕</text>
-  <text x="100"  y="750" font-size="55" fill="#E8650A">🧄</text>
-  <text x="1350" y="820" font-size="65" fill="#E8650A">🍅</text>
-  <text x="700"  y="80"  font-size="50" fill="#E8650A">🫒</text>
-  <text x="200"  y="450" font-size="45" fill="#E8650A">🌿</text>
-  <text x="1200" y="500" font-size="58" fill="#E8650A">🧅</text>
-  <text x="500"  y="850" font-size="52" fill="#E8650A">🥦</text>
-  <text x="950"  y="780" font-size="48" fill="#E8650A">🧈</text>
-  <text x="1100" y="90"  font-size="44" fill="#E8650A">🍋</text>
-</svg>
-
-<!-- Toast -->
-<div class="toast" id="toast"></div>
-
-<!-- API Key Modal -->
-<div class="modal-overlay" id="api-modal">
-  <div class="modal">
-    <div style="font-size:2.5rem;margin-bottom:12px">👨‍🍳</div>
-    <h2>Welcome to Chefly</h2>
-    <p>To get AI-powered recipes enter your <strong>Anthropic API key</strong>. It stays in your browser and is never sent anywhere except directly to Anthropic.</p>
-    <input type="password" id="api-key-input" placeholder="sk-ant-..." />
-    <button class="btn btn-primary btn-full" onclick="saveApiKey()">Start Cooking →</button>
-    <p class="modal-note">Get a free key at <strong>console.anthropic.com</strong></p>
+<!-- ── NAV ── -->
+<nav id="main-nav">
+  <a href="index.html" class="nav-logo">
+    <div class="nav-logo-icon">👨‍🍳</div>
+    <span class="nav-logo-text">Chefly</span>
+  </a>
+  <div class="nav-links">
+    <a href="#how-it-works">How It Works</a>
+    <a href="#features">Features</a>
+    <a href="#cuisines">Cuisines</a>
+    <a href="about.html">About</a>
+    <a href="app.html" class="nav-cta">Try Chefly Free →</a>
   </div>
-</div>
+  <button class="nav-hamburger" onclick="toggleMobileMenu()">☰</button>
+</nav>
 
-<!-- Floating action buttons -->
-<div class="fab-row">
-  <button class="fab fab-cookbook" title="My Cookbook" onclick="openCookbook()">
-    📖
-    <span class="fab-cookbook-badge hidden" id="cookbook-badge">0</span>
-  </button>
-  <button class="fab fab-key" title="Change API Key" onclick="showApiModal()">🔑</button>
-</div>
-
-<!-- ══════════════════════════════════════════
-     SCREEN 1 — Ingredient Input
-══════════════════════════════════════════ -->
-<div class="screen active" id="screen-1">
-  <div class="progress-dots">
-    <div class="dot active"></div><div class="dot"></div>
-    <div class="dot"></div><div class="dot"></div>
+<!-- ── HERO ── -->
+<section class="hero" id="home">
+  <div class="hero-bg">
+    <div class="hero-blob hero-blob-1"></div>
+    <div class="hero-blob hero-blob-2"></div>
+    <div class="hero-blob hero-blob-3"></div>
   </div>
-  <div style="text-align:center">
-    <div class="logo" style="justify-content:center">
-      <div class="logo-icon">👨‍🍳</div>
-      <span class="logo-text">Chefly</span>
-    </div>
-    <p class="tagline">Cook smarter with what you have.</p>
-  </div>
-  <div class="card">
-    <h2>What's in your kitchen?</h2>
-    <p class="sub">Add 2–10 ingredients and we'll suggest recipes you can actually make.</p>
-    <div class="tag-input-wrap" id="tag-wrap" onclick="document.getElementById('ingredient-input').focus()">
-      <input type="text" id="ingredient-input" placeholder="Type an ingredient..." maxlength="32" />
-    </div>
-    <p class="input-hint">Press <strong>Enter</strong> or <strong>Tab</strong> to add · <span id="count-label">0 / 10 added</span></p>
-    <button class="btn btn-primary btn-full" id="find-btn" disabled onclick="goToCuisine()">Find Recipes →</button>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════
-     SCREEN 2 — Cuisine Preference
-══════════════════════════════════════════ -->
-<div class="screen" id="screen-2">
-  <div class="progress-dots">
-    <div class="dot done"></div><div class="dot active"></div>
-    <div class="dot"></div><div class="dot"></div>
-  </div>
-  <div class="card" style="max-width:520px">
-    <h2>Choose a cuisine</h2>
-    <p class="sub">Pick a style or let Chefly surprise you.</p>
-
-    <div class="healthy-toggle" id="healthy-toggle" onclick="toggleHealthy()">
-      <span class="healthy-toggle-icon">🥗</span>
-      <div class="healthy-toggle-text">
-        <strong>Healthy Mode</strong>
-        <span>Focus on low-calorie, high-protein recipes</span>
+  <div class="hero-inner">
+    <div class="hero-content">
+      <div class="hero-badge">
+        <div class="dot"></div>
+        Powered by Claude AI
       </div>
-      <div class="toggle-switch"></div>
-    </div>
-
-    <div class="cuisine-grid">
-      <div class="cuisine-card" data-cuisine="Italian"  onclick="selectCuisine(this)"><span class="cuisine-flag">🇮🇹</span><span class="cuisine-name">Italian</span></div>
-      <div class="cuisine-card" data-cuisine="Japanese" onclick="selectCuisine(this)"><span class="cuisine-flag">🇯🇵</span><span class="cuisine-name">Japanese</span></div>
-      <div class="cuisine-card" data-cuisine="Mexican"  onclick="selectCuisine(this)"><span class="cuisine-flag">🇲🇽</span><span class="cuisine-name">Mexican</span></div>
-      <div class="cuisine-card" data-cuisine="Indian"   onclick="selectCuisine(this)"><span class="cuisine-flag">🇮🇳</span><span class="cuisine-name">Indian</span></div>
-      <div class="cuisine-card" data-cuisine="American" onclick="selectCuisine(this)"><span class="cuisine-flag">🇺🇸</span><span class="cuisine-name">American</span></div>
-      <div class="cuisine-card" data-cuisine="Any"      onclick="selectCuisine(this)"><span class="cuisine-flag">🌍</span><span class="cuisine-name">Any</span></div>
-      <div class="cuisine-card surprise" data-cuisine="surprise" onclick="selectCuisine(this)"><span class="cuisine-flag">🎲</span><span class="cuisine-name">Surprise Me!</span></div>
-    </div>
-
-    <div style="display:flex;gap:10px">
-      <button class="btn btn-secondary" style="flex:1" onclick="goToScreen(1)">← Back</button>
-      <button class="btn btn-primary"   style="flex:2" onclick="goToRecipes()">Next →</button>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════
-     SCREEN 3 — AI Recipe Suggestions
-══════════════════════════════════════════ -->
-<div class="screen" id="screen-3" style="justify-content:flex-start;padding-top:48px">
-  <div class="progress-dots">
-    <div class="dot done"></div><div class="dot done"></div>
-    <div class="dot active"></div><div class="dot"></div>
-  </div>
-
-  <div id="recipes-loader" class="loader-wrap">
-    <div class="chef-loader">
-      <div class="ring"></div><div class="ring"></div>
-      <div class="emoji">🍳</div>
-    </div>
-    <p class="loader-text">Chefly is cooking up ideas...</p>
-    <p class="loader-sub">Asking our culinary AI for the perfect recipes</p>
-  </div>
-
-  <div id="recipes-error" class="error-box" style="max-width:520px;display:none">
-    <p id="recipes-error-msg">Something went wrong. Please try again.</p>
-    <button class="btn btn-primary" onclick="fetchRecipes()">Retry</button>
-  </div>
-
-  <div id="recipes-content" style="display:none;width:100%">
-    <div class="recipes-header">
-      <h1 id="recipes-heading">Here are your recipes</h1>
-      <p>Click a card to see the full recipe and cooking guide · ❤️ to save to your Cookbook</p>
-    </div>
-    <div class="recipes-grid" id="recipes-grid" style="margin:0 auto"></div>
-    <div style="text-align:center;margin-top:20px;padding-bottom:40px">
-      <button class="btn btn-secondary" onclick="goToScreen(1)">Start Over</button>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════
-     SCREEN 4 — Recipe Detail
-══════════════════════════════════════════ -->
-<div class="screen" id="screen-4" style="justify-content:flex-start;padding-top:40px">
-  <div class="progress-dots">
-    <div class="dot done"></div><div class="dot done"></div>
-    <div class="dot done"></div><div class="dot active"></div>
-  </div>
-
-  <div class="detail-wrap">
-    <button class="back-btn" id="detail-back-btn" onclick="goToScreen(3)">← Back to Recipes</button>
-
-    <div class="detail-card">
-      <div class="detail-hero">
-        <button class="detail-heart-btn" id="detail-heart" onclick="toggleFavouriteDetail()">❤️</button>
-        <div class="detail-hero-meta">
-          <span class="detail-cuisine-flag" id="detail-flag"></span>
-          <span class="detail-cuisine-name" id="detail-cuisine"></span>
-        </div>
-        <h1 class="detail-title" id="detail-title"></h1>
-        <p class="detail-desc"  id="detail-desc"></p>
-        <div class="detail-badges">
-          <span class="detail-badge" id="detail-time"></span>
-          <span class="detail-badge" id="detail-difficulty"></span>
-          <span class="detail-badge" id="detail-match"></span>
-        </div>
+      <h1 class="hero-title">
+        Turn your ingredients into <span>amazing recipes</span>
+      </h1>
+      <p class="hero-sub">
+        Chefly is your AI-powered culinary assistant. Tell us what's in your fridge and we'll suggest 5 delicious, personalised recipes you can make right now — with step-by-step guides and YouTube tutorials.
+      </p>
+      <div class="hero-actions">
+        <a href="app.html" class="btn-hero-primary">🍳 Start Cooking Free</a>
+        <a href="#how-it-works" class="btn-hero-secondary">See How It Works ↓</a>
       </div>
-
-      <div class="detail-body">
-
-        <!-- Nutrition panel -->
-        <div class="nutrition-panel" id="detail-nutrition" style="display:none">
-          <div class="nut-card cal">
-            <span class="nut-big"  id="detail-calories">—</span>
-            <span class="nut-unit">kcal / serving</span>
-            <span class="nut-lbl">🔥 Calories</span>
-          </div>
-          <div class="nut-card pro">
-            <span class="nut-big"  id="detail-protein">—</span>
-            <span class="nut-unit">g / serving</span>
-            <span class="nut-lbl">💪 Protein</span>
-          </div>
+      <div class="hero-stats">
+        <div class="stat">
+          <div class="stat-num">5</div>
+          <div class="stat-label">Recipes per search</div>
         </div>
-
-        <!-- Serving scaler -->
-        <div class="serving-scaler" id="serving-scaler" style="display:none">
-          <div class="serving-label">
-            Servings <span id="serving-note"></span>
-          </div>
-          <div class="serving-controls">
-            <button class="serving-btn" id="serving-minus" onclick="changeServings(-1)">−</button>
-            <span class="serving-count" id="serving-count">1</span>
-            <button class="serving-btn" id="serving-plus"  onclick="changeServings(1)">+</button>
-          </div>
+        <div class="stat">
+          <div class="stat-num">10+</div>
+          <div class="stat-label">Cuisine styles</div>
         </div>
-
-        <!-- Shopping list -->
-        <div class="shopping-section" id="shopping-section" style="display:none">
-          <div class="shopping-header">
-            <span class="shopping-title">🛒 Ingredients</span>
-            <button class="copy-list-btn" id="copy-list-btn" onclick="copyShoppingList()">📋 Copy missing</button>
-          </div>
-          <div class="shopping-items" id="shopping-items"></div>
-        </div>
-
-        <!-- Action row: YouTube + Share -->
-        <div class="action-row">
-          <a id="watch-btn" class="watch-btn" target="_blank" rel="noopener">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
-            Watch on YouTube
-          </a>
-          <button class="share-btn" id="share-btn" onclick="shareRecipe()">
-            📤 Share
-          </button>
-        </div>
-
-        <!-- Steps loader -->
-        <div id="steps-loader" class="loader-wrap" style="min-height:180px">
-          <div class="chef-loader" style="width:56px;height:56px">
-            <div class="ring"></div><div class="ring"></div>
-            <div class="emoji" style="font-size:1.3rem">📝</div>
-          </div>
-          <p class="loader-text" style="font-size:.95rem">Writing your cooking guide...</p>
-        </div>
-
-        <div id="steps-error" class="error-box" style="display:none">
-          <p id="steps-error-msg">Couldn't load steps. Please retry.</p>
-          <button class="btn btn-primary" onclick="fetchSteps()">Retry</button>
-        </div>
-
-        <div id="steps-content" style="display:none">
-          <h3 class="steps-title">📋 Step-by-Step Guide</h3>
-          <div id="steps-list"></div>
+        <div class="stat">
+          <div class="stat-num">0s</div>
+          <div class="stat-label">Sign-up time</div>
         </div>
       </div>
     </div>
 
-    <div style="text-align:center;margin-top:20px;margin-bottom:60px">
-      <button class="btn btn-secondary" onclick="goToScreen(1)">Start a New Recipe Search</button>
+    <!-- Floating phone mockup -->
+    <div class="hero-visual">
+      <div class="hero-phone">
+        <div class="phone-header">
+          <div class="phone-header-logo">👨‍🍳 Chefly</div>
+          <div class="phone-header-sub">Cook smarter with what you have</div>
+        </div>
+        <div class="phone-body">
+          <div class="phone-card">
+            <div class="phone-recipe-name">🇮🇹 Creamy Tomato Pasta</div>
+            <div class="phone-recipe-meta">
+              <span class="phone-chip easy">Easy</span>
+              <span class="phone-chip time">⏱ 20 mins</span>
+            </div>
+            <div class="phone-bar"><div class="phone-bar-fill" style="width:92%"></div></div>
+            <div style="font-size:.62rem;color:#9CA3AF;margin-top:3px">92% ingredient match</div>
+            <div class="phone-nut">
+              <div class="phone-nut-pill cal-pill">🔥 420 kcal</div>
+              <div class="phone-nut-pill pro-pill">💪 18g protein</div>
+            </div>
+          </div>
+          <div class="phone-card">
+            <div class="phone-recipe-name">🇬🇷 Greek Egg Scramble</div>
+            <div class="phone-recipe-meta">
+              <span class="phone-chip easy">Easy</span>
+              <span class="phone-chip time">⏱ 12 mins</span>
+            </div>
+            <div class="phone-bar"><div class="phone-bar-fill" style="width:88%"></div></div>
+            <div style="font-size:.62rem;color:#9CA3AF;margin-top:3px">88% ingredient match</div>
+            <div class="phone-nut">
+              <div class="phone-nut-pill cal-pill">🔥 310 kcal</div>
+              <div class="phone-nut-pill pro-pill">💪 24g protein</div>
+            </div>
+          </div>
+          <div class="phone-card" style="opacity:.6">
+            <div class="phone-recipe-name">🌍 Garlic Fried Rice</div>
+            <div class="phone-recipe-meta">
+              <span class="phone-chip time">⏱ 15 mins</span>
+            </div>
+            <div class="phone-bar"><div class="phone-bar-fill" style="width:75%"></div></div>
+            <div style="font-size:.62rem;color:#9CA3AF;margin-top:3px">75% ingredient match</div>
+          </div>
+        </div>
+      </div>
+      <div class="hero-float-card hero-float-card-1">
+        <div class="float-icon">🛒</div>
+        <div class="float-text">
+          <strong>Shopping List</strong>
+          <span>3 items needed</span>
+        </div>
+      </div>
+      <div class="hero-float-card hero-float-card-2">
+        <div class="float-icon">❤️</div>
+        <div class="float-text">
+          <strong>Saved to Cookbook</strong>
+          <span>12 favourites</span>
+        </div>
+      </div>
     </div>
   </div>
-</div>
+</section>
 
-<!-- ══════════════════════════════════════════
-     SCREEN 5 — My Cookbook
-══════════════════════════════════════════ -->
-<div class="screen" id="screen-5" style="justify-content:flex-start;padding-top:48px">
-  <div class="detail-wrap" style="max-width:680px">
-    <button class="back-btn" id="cookbook-back-btn">← Back</button>
+<!-- ── HOW IT WORKS ── -->
+<section class="how-it-works" id="how-it-works">
+  <div class="section-inner">
+    <span class="section-label">How It Works</span>
+    <h2 class="section-title">From fridge to <span>fork</span> in 4 steps</h2>
+    <p class="section-sub">No account needed. No subscription. Just type your ingredients and let our AI do the cooking planning.</p>
 
-    <div class="cookbook-header">
-      <h1>📖 My Cookbook</h1>
-      <p>Your saved recipes — ready to cook anytime</p>
-    </div>
-
-    <div class="cookbook-grid" id="cookbook-grid"></div>
-
-    <div style="text-align:center;margin-top:20px;padding-bottom:60px">
-      <button class="btn btn-primary" onclick="goToScreen(1)">Find More Recipes</button>
+    <div class="steps-grid">
+      <div class="step-block">
+        <div class="step-number">1</div>
+        <span class="step-emoji">🥦</span>
+        <div class="step-title">Add your ingredients</div>
+        <div class="step-desc">Type in whatever you have at home — eggs, tomatoes, pasta, cheese. Up to 10 ingredients.</div>
+      </div>
+      <div class="step-block">
+        <div class="step-number">2</div>
+        <span class="step-emoji">🌍</span>
+        <div class="step-title">Pick a cuisine</div>
+        <div class="step-desc">Choose Italian, Japanese, Mexican, Indian, American — or let Chefly surprise you.</div>
+      </div>
+      <div class="step-block">
+        <div class="step-number">3</div>
+        <span class="step-emoji">✨</span>
+        <div class="step-title">Get AI recipes</div>
+        <div class="step-desc">Claude AI generates 5 personalised recipes with calories, protein, and ingredient match scores.</div>
+      </div>
+      <div class="step-block">
+        <div class="step-number">4</div>
+        <span class="step-emoji">👨‍🍳</span>
+        <div class="step-title">Cook & enjoy</div>
+        <div class="step-desc">Follow the step-by-step guide, watch a YouTube tutorial, and tick off steps as you cook.</div>
+      </div>
     </div>
   </div>
+</section>
+
+<!-- ── FEATURES ── -->
+<section class="features" id="features">
+  <div class="section-inner">
+    <span class="section-label">Features</span>
+    <h2 class="section-title">Everything a home cook <span>needs</span></h2>
+    <p class="section-sub">Chefly isn't just a recipe finder — it's your complete kitchen companion.</p>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🤖</div>
+        <div class="feature-title">Claude AI Powered</div>
+        <div class="feature-desc">Backed by Anthropic's Claude — one of the world's most capable AI models — for creative, realistic recipe suggestions every time.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔥</div>
+        <div class="feature-title">Nutrition Tracking</div>
+        <div class="feature-desc">Every recipe shows estimated calories and protein per serving. Scale up or down with our serving size adjuster.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🥗</div>
+        <div class="feature-title">Healthy Mode</div>
+        <div class="feature-desc">Toggle Healthy Mode to get low-calorie, high-protein recipes. Perfect for fitness goals without sacrificing flavour.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🛒</div>
+        <div class="feature-title">Smart Shopping List</div>
+        <div class="feature-desc">See exactly which ingredients you have and which you need. Copy the missing items to your clipboard in one tap.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📖</div>
+        <div class="feature-title">My Cookbook</div>
+        <div class="feature-desc">Save your favourite recipes to your personal Cookbook. They persist between sessions so you can come back anytime.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎬</div>
+        <div class="feature-title">YouTube Integration</div>
+        <div class="feature-desc">Every recipe links to a tailored YouTube cooking tutorial so you can watch a professional chef make the exact dish.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CUISINES ── -->
+<section class="cuisines" id="cuisines">
+  <div class="section-inner" style="text-align:center">
+    <span class="section-label">Cuisines</span>
+    <h2 class="section-title">Cook food from <span>around the world</span></h2>
+    <p class="section-sub" style="margin:0 auto">From a quick Italian pasta to an authentic Indian curry — choose your flavour or let Chefly surprise you.</p>
+
+    <div class="cuisines-row">
+      <div class="cuisine-pill"><span class="flag">🇮🇹</span><span class="name">Italian</span></div>
+      <div class="cuisine-pill"><span class="flag">🇯🇵</span><span class="name">Japanese</span></div>
+      <div class="cuisine-pill"><span class="flag">🇲🇽</span><span class="name">Mexican</span></div>
+      <div class="cuisine-pill"><span class="flag">🇮🇳</span><span class="name">Indian</span></div>
+      <div class="cuisine-pill"><span class="flag">🇺🇸</span><span class="name">American</span></div>
+      <div class="cuisine-pill"><span class="flag">🇹🇭</span><span class="name">Thai</span></div>
+      <div class="cuisine-pill"><span class="flag">🇬🇷</span><span class="name">Greek</span></div>
+      <div class="cuisine-pill"><span class="flag">🇫🇷</span><span class="name">French</span></div>
+      <div class="cuisine-pill"><span class="flag">🇰🇷</span><span class="name">Korean</span></div>
+      <div class="cuisine-pill"><span class="flag">🇪🇸</span><span class="name">Spanish</span></div>
+      <div class="cuisine-pill"><span class="flag">🎲</span><span class="name">Surprise Me!</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── TESTIMONIALS ── -->
+<section class="testimonials">
+  <div class="section-inner">
+    <span class="section-label">Loved By Home Cooks</span>
+    <h2 class="section-title">What people are <span>saying</span></h2>
+
+    <div class="testi-grid">
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">"I had eggs, spinach, and feta cheese and had no idea what to make. Chefly suggested a Greek-style frittata in seconds. Absolutely delicious and dead easy."</p>
+        <div class="testi-author">
+          <div class="testi-avatar">👩</div>
+          <div>
+            <div class="testi-name">Sarah M.</div>
+            <div class="testi-role">Home cook, Melbourne</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">"The Healthy Mode is a game changer. I'm trying to hit my protein macros and Chefly gives me high-protein recipes using whatever I have in the fridge."</p>
+        <div class="testi-author">
+          <div class="testi-avatar">🧑</div>
+          <div>
+            <div class="testi-name">James K.</div>
+            <div class="testi-role">Fitness enthusiast, Sydney</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">"The shopping list feature alone is worth it. I can see exactly what I need to buy for each recipe, so there's zero food waste. Love this app."</p>
+        <div class="testi-author">
+          <div class="testi-avatar">👩‍🦱</div>
+          <div>
+            <div class="testi-name">Priya R.</div>
+            <div class="testi-role">Busy mum, Auckland</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA BAND ── -->
+<div class="cta-band">
+  <h2>Ready to cook something amazing?</h2>
+  <p>Join thousands of home cooks who use Chefly every day to turn their ingredients into extraordinary meals.</p>
+  <a href="app.html" class="btn-cta-white">🍳 Try Chefly Free — No Sign Up</a>
 </div>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div>
+        <div class="footer-brand-logo">
+          <div class="footer-brand-icon">👨‍🍳</div>
+          <span class="footer-brand-name">Chefly</span>
+        </div>
+        <p class="footer-brand-desc">Your AI-powered recipe assistant. Cook smarter with what you have.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <ul>
+          <li><a href="app.html">Recipe Finder</a></li>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#cuisines">Cuisines</a></li>
+          <li><a href="#how-it-works">How It Works</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="about.html">About</a></li>
+          <li><a href="about.html#contact">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Technology</h4>
+        <ul>
+          <li><a href="https://anthropic.com" target="_blank" rel="noopener">Anthropic Claude</a></li>
+          <li><a href="https://console.anthropic.com" target="_blank" rel="noopener">Get API Key</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p class="footer-copy">© 2026 Chefly. All rights reserved.</p>
+      <p class="footer-badge">Built with <span>♥</span> and powered by Claude AI</p>
+    </div>
+  </div>
+</footer>
 
 <script>
-// ── State ────────────────────────────────────────────────
-const state = {
-  apiKey:        localStorage.getItem('chefly_key') || '',
-  ingredients:   [],
-  cuisine:       'Any',
-  healthyMode:   false,
-  recipes:       [],
-  currentRecipe: null,
-  servings:      1,
-  baseCalories:  0,
-  baseProtein:   0,
-  cookbookFrom:  3, // which screen to go back to from cookbook
-};
-
-// Favourites persisted in localStorage
-let favourites = JSON.parse(localStorage.getItem('chefly_favs') || '[]');
-
-const cuisineFlags = {
-  Italian:'🇮🇹', Japanese:'🇯🇵', Mexican:'🇲🇽', Indian:'🇮🇳',
-  American:'🇺🇸', Any:'🌍', Thai:'🇹🇭', Greek:'🇬🇷',
-  French:'🇫🇷', Korean:'🇰🇷', Spanish:'🇪🇸',
-};
-const surpriseCuisines = ['Italian','Japanese','Mexican','Indian','American','Thai','Greek','French','Korean','Spanish'];
-
-// ── Init ─────────────────────────────────────────────────
-if (state.apiKey) hideApiModal();
-updateCookbookBadge();
-
-document.getElementById('cookbook-back-btn').onclick = () => goToScreen(state.cookbookFrom);
-
-// ── API Key ───────────────────────────────────────────────
-function saveApiKey() {
-  const val = document.getElementById('api-key-input').value.trim();
-  if (!val.startsWith('sk-ant-') && !val.startsWith('sk-')) {
-    alert('Please enter a valid Anthropic API key (starts with sk-ant-)');
-    return;
-  }
-  state.apiKey = val;
-  localStorage.setItem('chefly_key', val);
-  hideApiModal();
-}
-function showApiModal() {
-  document.getElementById('api-key-input').value = state.apiKey;
-  document.getElementById('api-modal').classList.remove('hidden');
-}
-function hideApiModal() {
-  document.getElementById('api-modal').classList.add('hidden');
-}
-
-// ── Screen navigation ─────────────────────────────────────
-function goToScreen(n) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById('screen-' + n).classList.add('active');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-// ── Toast ─────────────────────────────────────────────────
-let toastTimer;
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
-}
-
-// ── Screen 1: Ingredients ─────────────────────────────────
-const tagWrap        = document.getElementById('tag-wrap');
-const ingredientInput= document.getElementById('ingredient-input');
-const findBtn        = document.getElementById('find-btn');
-
-function addIngredient(val) {
-  val = val.trim().toLowerCase().replace(/\s+/g, ' ');
-  if (!val || state.ingredients.includes(val) || state.ingredients.length >= 10) return;
-  state.ingredients.push(val);
-  renderTags(); ingredientInput.value = ''; updateFindBtn();
-}
-function removeIngredient(val) {
-  state.ingredients = state.ingredients.filter(i => i !== val);
-  renderTags(); updateFindBtn();
-}
-function renderTags() {
-  tagWrap.querySelectorAll('.tag').forEach(t => t.remove());
-  state.ingredients.forEach(ing => {
-    const tag = document.createElement('div');
-    tag.className = 'tag';
-    tag.innerHTML = `${cap(ing)} <button onclick="removeIngredient('${ing.replace(/'/g,"\\'")}')">✕</button>`;
-    tagWrap.insertBefore(tag, ingredientInput);
-  });
-  document.getElementById('count-label').textContent = `${state.ingredients.length} / 10 added`;
-  ingredientInput.placeholder = state.ingredients.length >= 10 ? 'Max reached' : 'Type an ingredient...';
-  ingredientInput.disabled    = state.ingredients.length >= 10;
-}
-function updateFindBtn() { findBtn.disabled = state.ingredients.length < 2; }
-function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
-
-ingredientInput.addEventListener('keydown', e => {
-  if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); addIngredient(ingredientInput.value); }
-  if (e.key === 'Backspace' && !ingredientInput.value && state.ingredients.length)
-    removeIngredient(state.ingredients[state.ingredients.length - 1]);
-});
-
-// ── Screen 2: Cuisine ─────────────────────────────────────
-function toggleHealthy() {
-  state.healthyMode = !state.healthyMode;
-  document.getElementById('healthy-toggle').classList.toggle('active', state.healthyMode);
-}
-function goToCuisine() { goToScreen(2); }
-function selectCuisine(el) {
-  document.querySelectorAll('.cuisine-card').forEach(c => c.classList.remove('selected'));
-  el.classList.add('selected');
-  let c = el.dataset.cuisine;
-  if (c === 'surprise') c = surpriseCuisines[Math.floor(Math.random() * surpriseCuisines.length)];
-  state.cuisine = c;
-}
-
-// ── Screen 3: Recipes ─────────────────────────────────────
-function goToRecipes() {
-  if (!state.apiKey) { showApiModal(); return; }
-  goToScreen(3); fetchRecipes();
-}
-
-async function fetchRecipes() {
-  const loader  = document.getElementById('recipes-loader');
-  const error   = document.getElementById('recipes-error');
-  const content = document.getElementById('recipes-content');
-  loader.style.display  = 'flex';
-  error.style.display   = 'none';
-  content.style.display = 'none';
-
-  const cuisine = state.cuisine === 'Any' ? 'any cuisine' : state.cuisine;
-  const ingList = state.ingredients.join(', ');
-  const healthyNote = state.healthyMode
-    ? '\nIMPORTANT: The user wants HEALTHY recipes. Prioritise low-calorie, high-protein, nutritious meals. Avoid heavy cream, deep-frying, or excess sugar.'
-    : '';
-
-  try {
-    const data = await claudeCall(
-      `You are Chefly, a world-class culinary AI. Given a list of ingredients and a preferred cuisine, suggest exactly 5 creative, realistic recipes the user can make. For each recipe return a JSON object with:
-- name (string)
-- cuisine (string)
-- description (1-2 sentence appetizing description)
-- difficulty (Easy / Medium / Hard)
-- time (e.g. "20 mins")
-- matchScore (1-100, how well it matches the ingredients)
-- calories (number, estimated kcal per serving)
-- protein (number, estimated grams protein per serving)
-- keyIngredients (array of strings — ALL main ingredients this recipe needs, including ones from the user's list and common pantry items)
-- youtubeSearchQuery (specific YouTube search string for a cooking tutorial)
-Return ONLY a valid JSON array of 5 recipe objects. No markdown, no extra text.`,
-      `Ingredients I have: ${ingList}\nPreferred cuisine: ${cuisine}${healthyNote}\n\nSuggest exactly 5 recipes.`
-    );
-
-    let recipes;
-    try {
-      const clean = data.replace(/```json?/g,'').replace(/```/g,'').trim();
-      recipes = JSON.parse(clean);
-    } catch { throw new Error('AI returned unexpected format. Please retry.'); }
-
-    state.recipes = recipes;
-    renderRecipes(recipes);
-    loader.style.display  = 'none';
-    content.style.display = 'block';
-
-    const healthyLabel = state.healthyMode ? ' 🥗 Healthy' : '';
-    document.getElementById('recipes-heading').textContent =
-      `5${healthyLabel} recipes using ${state.ingredients.slice(0,3).map(cap).join(', ')}${state.ingredients.length > 3 ? ' & more' : ''}`;
-
-  } catch (err) {
-    loader.style.display = 'none';
-    error.style.display  = 'block';
-    document.getElementById('recipes-error-msg').textContent = err.message;
-  }
-}
-
-function renderRecipes(recipes) {
-  const grid = document.getElementById('recipes-grid');
-  grid.innerHTML = '';
-  recipes.forEach((r, i) => {
-    const flag       = cuisineFlags[r.cuisine] || '🍽️';
-    const badgeCls   = { Easy:'badge-easy', Medium:'badge-medium', Hard:'badge-hard' }[r.difficulty] || 'badge-medium';
-    const isFav      = isFavourite(r.name);
-    const healthyBadge = state.healthyMode ? `<span class="badge-healthy">🥗 Healthy</span>` : '';
-    const nutStrip   = (r.calories || r.protein) ? `
-      <div class="nutrition-strip">
-        <div class="nutrition-pill calories"><span>🔥</span><span class="nut-val">${r.calories ?? '—'}</span><span class="nut-label">kcal</span></div>
-        <div class="nutrition-pill protein"><span>💪</span><span class="nut-val">${r.protein ?? '—'}g</span><span class="nut-label">protein</span></div>
-      </div>` : '';
-
-    const card = document.createElement('div');
-    card.className = 'recipe-card';
-    card.style.animationDelay = `${i * 0.09}s`;
-    card.innerHTML = `
-      <div class="recipe-card-top">
-        <div class="recipe-name-row">
-          <div class="recipe-name">${r.name}</div>
-        </div>
-        <div class="recipe-card-actions">
-          <button class="heart-btn ${isFav ? 'active' : ''}" title="Save to Cookbook"
-            onclick="event.stopPropagation();toggleFavourite(${i})">❤️</button>
-          <span class="recipe-flag">${flag}</span>
-        </div>
-      </div>
-      <p class="recipe-desc">${r.description}</p>
-      <div class="recipe-meta">
-        <span class="badge ${badgeCls}">${r.difficulty}</span>
-        ${healthyBadge}
-        <span class="meta-item">⏱ ${r.time}</span>
-        <span class="meta-item">🌍 ${r.cuisine}</span>
-      </div>
-      <div class="match-bar-wrap">
-        <div class="match-label"><span>Ingredient match</span><span>${r.matchScore}%</span></div>
-        <div class="match-bar"><div class="match-fill" style="width:0%" data-target="${r.matchScore}%"></div></div>
-      </div>
-      ${nutStrip}`;
-    card.addEventListener('click', () => openRecipe(r));
-    grid.appendChild(card);
+  // Sticky nav shadow
+  window.addEventListener('scroll', () => {
+    document.getElementById('main-nav').classList.toggle('scrolled', window.scrollY > 20);
   });
 
-  requestAnimationFrame(() => setTimeout(() => {
-    grid.querySelectorAll('.match-fill').forEach(el => el.style.width = el.dataset.target);
-  }, 200));
-}
-
-// ── Favourites ────────────────────────────────────────────
-function isFavourite(name) { return favourites.some(f => f.name === name); }
-
-function toggleFavourite(idx) {
-  const r = state.recipes[idx];
-  if (isFavourite(r.name)) {
-    favourites = favourites.filter(f => f.name !== r.name);
-    showToast('Removed from Cookbook');
-  } else {
-    favourites.push({ ...r, savedAt: Date.now() });
-    showToast('❤️ Saved to My Cookbook!');
-  }
-  localStorage.setItem('chefly_favs', JSON.stringify(favourites));
-  updateCookbookBadge();
-
-  // Update heart button on card
-  const btn = document.querySelectorAll('.heart-btn')[idx];
-  if (btn) btn.classList.toggle('active', isFavourite(r.name));
-}
-
-function toggleFavouriteDetail() {
-  const r = state.currentRecipe;
-  if (!r) return;
-  if (isFavourite(r.name)) {
-    favourites = favourites.filter(f => f.name !== r.name);
-    showToast('Removed from Cookbook');
-  } else {
-    favourites.push({ ...r, savedAt: Date.now() });
-    showToast('❤️ Saved to My Cookbook!');
-  }
-  localStorage.setItem('chefly_favs', JSON.stringify(favourites));
-  updateCookbookBadge();
-  updateDetailHeart();
-}
-
-function updateDetailHeart() {
-  const btn = document.getElementById('detail-heart');
-  if (!btn || !state.currentRecipe) return;
-  btn.classList.toggle('active', isFavourite(state.currentRecipe.name));
-}
-
-function updateCookbookBadge() {
-  const badge = document.getElementById('cookbook-badge');
-  badge.textContent = favourites.length;
-  badge.classList.toggle('hidden', favourites.length === 0);
-}
-
-function openCookbook() {
-  state.cookbookFrom = document.querySelector('.screen.active')?.id?.replace('screen-','') || 1;
-  renderCookbook();
-  goToScreen(5);
-}
-
-function renderCookbook() {
-  const grid = document.getElementById('cookbook-grid');
-  if (!favourites.length) {
-    grid.innerHTML = `<div class="cookbook-empty"><div class="empty-icon">📭</div><p>No saved recipes yet.<br>Tap ❤️ on any recipe to add it here.</p></div>`;
-    return;
-  }
-  grid.innerHTML = '';
-  [...favourites].reverse().forEach((r, i) => {
-    const flag    = cuisineFlags[r.cuisine] || '🍽️';
-    const badgeCls= { Easy:'badge-easy', Medium:'badge-medium', Hard:'badge-hard' }[r.difficulty] || 'badge-medium';
-    const card = document.createElement('div');
-    card.className = 'cookbook-card';
-    card.style.animationDelay = `${i * 0.06}s`;
-    card.innerHTML = `
-      <span class="cookbook-flag">${flag}</span>
-      <div class="cookbook-info">
-        <div class="cookbook-name">${r.name}</div>
-        <div class="cookbook-meta">
-          <span class="badge ${badgeCls}" style="font-size:.7rem">${r.difficulty}</span>
-          <span>⏱ ${r.time}</span>
-          ${r.calories ? `<span>🔥 ${r.calories} kcal</span>` : ''}
-          ${r.protein  ? `<span>💪 ${r.protein}g protein</span>` : ''}
-        </div>
-      </div>
-      <div class="cookbook-actions">
-        <button class="cookbook-cook-btn" onclick="cookFromCookbook('${r.name.replace(/'/g,"\\'")}')">Cook</button>
-        <button class="cookbook-remove-btn" onclick="removeFromCookbook('${r.name.replace(/'/g,"\\'")}')">✕</button>
-      </div>`;
-    grid.appendChild(card);
-  });
-}
-
-function cookFromCookbook(name) {
-  const r = favourites.find(f => f.name === name);
-  if (!r) return;
-  // Restore ingredients from the recipe's keyIngredients as much as possible
-  state.recipes = [r]; // so openRecipe can find it
-  state.ingredients = r.keyIngredients ? r.keyIngredients.slice(0, 10) : state.ingredients;
-  openRecipe(r);
-}
-
-function removeFromCookbook(name) {
-  favourites = favourites.filter(f => f.name !== name);
-  localStorage.setItem('chefly_favs', JSON.stringify(favourites));
-  updateCookbookBadge();
-  renderCookbook();
-  showToast('Removed from Cookbook');
-}
-
-// ── Screen 4: Detail ──────────────────────────────────────
-function openRecipe(recipe, fromCookbook = false) {
-  state.currentRecipe = recipe;
-  state.servings      = 1;
-  state.baseCalories  = recipe.calories || 0;
-  state.baseProtein   = recipe.protein  || 0;
-
-  const flag = cuisineFlags[recipe.cuisine] || '🍽️';
-  document.getElementById('detail-flag').textContent     = flag;
-  document.getElementById('detail-cuisine').textContent  = recipe.cuisine;
-  document.getElementById('detail-title').textContent    = recipe.name;
-  document.getElementById('detail-desc').textContent     = recipe.description;
-  document.getElementById('detail-time').textContent     = '⏱ ' + recipe.time;
-  document.getElementById('detail-difficulty').textContent = '📊 ' + recipe.difficulty;
-  document.getElementById('detail-match').textContent    = '✅ ' + recipe.matchScore + '% match';
-
-  // Heart
-  updateDetailHeart();
-
-  // Nutrition
-  const nutPanel = document.getElementById('detail-nutrition');
-  const scalerEl = document.getElementById('serving-scaler');
-  if (recipe.calories || recipe.protein) {
-    document.getElementById('detail-calories').textContent = recipe.calories ?? '—';
-    document.getElementById('detail-protein').textContent  = recipe.protein  ?? '—';
-    nutPanel.style.display = 'flex';
-    scalerEl.style.display = 'flex';
-    document.getElementById('serving-count').textContent  = '1';
-    document.getElementById('serving-note').textContent   = '';
-    document.getElementById('serving-minus').disabled     = true;
-  } else {
-    nutPanel.style.display = 'none';
-    scalerEl.style.display = 'none';
-  }
-
-  // Shopping list
-  renderShoppingList(recipe);
-
-  // YouTube
-  const ytUrl = 'https://www.youtube.com/results?search_query=' + encodeURIComponent(recipe.youtubeSearchQuery || recipe.name + ' recipe');
-  document.getElementById('watch-btn').href = ytUrl;
-
-  // Share button reset
-  const shareBtn = document.getElementById('share-btn');
-  shareBtn.textContent = '📤 Share';
-  shareBtn.classList.remove('copied');
-
-  // Reset steps
-  document.getElementById('steps-loader').style.display  = 'flex';
-  document.getElementById('steps-error').style.display   = 'none';
-  document.getElementById('steps-content').style.display = 'none';
-
-  document.getElementById('detail-back-btn').onclick = () => goToScreen(fromCookbook ? 5 : 3);
-
-  goToScreen(4);
-  fetchSteps();
-}
-
-// ── Serving scaler ────────────────────────────────────────
-function changeServings(delta) {
-  const next = state.servings + delta;
-  if (next < 1 || next > 12) return;
-  state.servings = next;
-
-  document.getElementById('serving-count').textContent = next;
-  document.getElementById('serving-minus').disabled = next <= 1;
-  document.getElementById('serving-plus').disabled  = next >= 12;
-  document.getElementById('serving-note').textContent = next > 1 ? `(×${next})` : '';
-
-  if (state.baseCalories)
-    document.getElementById('detail-calories').textContent = Math.round(state.baseCalories * next);
-  if (state.baseProtein)
-    document.getElementById('detail-protein').textContent  = Math.round(state.baseProtein  * next);
-}
-
-// ── Shopping list ─────────────────────────────────────────
-function renderShoppingList(recipe) {
-  const section = document.getElementById('shopping-section');
-  const container = document.getElementById('shopping-items');
-  const copyBtn   = document.getElementById('copy-list-btn');
-
-  if (!recipe.keyIngredients || !recipe.keyIngredients.length) {
-    section.style.display = 'none'; return;
-  }
-
-  section.style.display = 'block';
-  container.innerHTML   = '';
-  copyBtn.textContent   = '📋 Copy missing';
-  copyBtn.classList.remove('copied');
-
-  const userHas = new Set(state.ingredients.map(i => i.toLowerCase()));
-  let missingList = [];
-
-  recipe.keyIngredients.forEach(ing => {
-    const low  = ing.toLowerCase();
-    const have = [...userHas].some(u => low.includes(u) || u.includes(low));
-    const chip = document.createElement('div');
-    chip.className = `shopping-item ${have ? 'have' : 'need'}`;
-    chip.innerHTML = `<span>${have ? '✓' : '+'}</span> ${ing}`;
-    container.appendChild(chip);
-    if (!have) missingList.push(ing);
-  });
-
-  if (!missingList.length) {
-    copyBtn.textContent = '✅ You have everything!';
-    copyBtn.disabled    = true;
-  } else {
-    copyBtn.disabled = false;
-    copyBtn.dataset.list = missingList.join('\n');
-  }
-}
-
-function copyShoppingList() {
-  const btn  = document.getElementById('copy-list-btn');
-  const list = btn.dataset.list;
-  if (!list) return;
-  const r   = state.currentRecipe;
-  const text = `🛒 Shopping list for "${r?.name}"\n\n${list}`;
-  navigator.clipboard.writeText(text).then(() => {
-    btn.textContent = '✅ Copied!';
-    btn.classList.add('copied');
-    showToast('Shopping list copied!');
-    setTimeout(() => { btn.textContent = '📋 Copy missing'; btn.classList.remove('copied'); }, 2500);
-  });
-}
-
-// ── Share recipe ──────────────────────────────────────────
-function shareRecipe() {
-  const r = state.currentRecipe;
-  if (!r) return;
-  const lines = [
-    `👨‍🍳 ${r.name} — via Chefly`,
-    `🌍 ${r.cuisine} · ${r.difficulty} · ⏱ ${r.time}`,
-    r.calories ? `🔥 ${r.calories} kcal · 💪 ${r.protein}g protein (per serving)` : '',
-    ``,
-    r.description,
-    ``,
-    `🎬 Watch: https://www.youtube.com/results?search_query=${encodeURIComponent(r.youtubeSearchQuery || r.name + ' recipe')}`,
-  ].filter(l => l !== undefined).join('\n');
-
-  navigator.clipboard.writeText(lines).then(() => {
-    const btn = document.getElementById('share-btn');
-    btn.textContent = '✅ Copied!';
-    btn.classList.add('copied');
-    showToast('Recipe copied to clipboard!');
-    setTimeout(() => { btn.textContent = '📤 Share'; btn.classList.remove('copied'); }, 2500);
-  });
-}
-
-// ── Steps ─────────────────────────────────────────────────
-async function fetchSteps() {
-  const loader  = document.getElementById('steps-loader');
-  const error   = document.getElementById('steps-error');
-  const content = document.getElementById('steps-content');
-  loader.style.display  = 'flex';
-  error.style.display   = 'none';
-  content.style.display = 'none';
-
-  const r       = state.currentRecipe;
-  const ingList = state.ingredients.join(', ');
-
-  try {
-    const data = await claudeCall(
-      `You are Chefly, a world-class culinary AI. Provide clear, numbered step-by-step cooking instructions.`,
-      `Recipe: ${r.name} (${r.cuisine} cuisine)
-Available ingredients: ${ingList}
-Difficulty: ${r.difficulty} | Time: ${r.time}
-
-Write a step-by-step cooking guide. Return ONLY a JSON array of strings (6-12 steps). No markdown, no extra text.`
-    );
-
-    let steps;
-    try {
-      steps = JSON.parse(data.replace(/```json?/g,'').replace(/```/g,'').trim());
-    } catch {
-      steps = data.split('\n')
-        .filter(l => /^\d+[\.\)]/.test(l.trim()))
-        .map(l => l.replace(/^\d+[\.\)]\s*/,'').trim())
-        .filter(Boolean);
-      if (!steps.length) throw new Error('Could not parse cooking steps.');
+  function toggleMobileMenu() {
+    const links = document.querySelector('.nav-links');
+    if (links.style.display === 'flex') {
+      links.style.display = 'none';
+    } else {
+      links.style.cssText = 'display:flex;flex-direction:column;position:fixed;top:68px;left:0;right:0;background:white;padding:20px 24px 28px;gap:16px;box-shadow:0 8px 32px rgba(0,0,0,.1);z-index:99;';
     }
-
-    renderSteps(steps);
-    loader.style.display  = 'none';
-    content.style.display = 'block';
-  } catch (err) {
-    loader.style.display = 'none';
-    error.style.display  = 'block';
-    document.getElementById('steps-error-msg').textContent = err.message;
   }
-}
-
-function renderSteps(steps) {
-  const list = document.getElementById('steps-list');
-  list.innerHTML = '';
-  steps.forEach((step, i) => {
-    const item = document.createElement('div');
-    item.className = 'step-item';
-    item.style.animationDelay = `${i * 0.06}s`;
-    item.innerHTML = `<div class="step-num">${i+1}</div><div class="step-text">${step}</div>`;
-    item.addEventListener('click', () => item.classList.toggle('done'));
-    list.appendChild(item);
-  });
-}
-
-// ── Claude API ────────────────────────────────────────────
-async function claudeCall(systemPrompt, userMessage) {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': state.apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 2048,
-      system: systemPrompt,
-      messages: [{ role: 'user', content: userMessage }],
-    }),
-  });
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    if (res.status === 401) throw new Error('Invalid API key. Click 🔑 to update it.');
-    if (res.status === 429) throw new Error('Rate limit reached. Please wait a moment and retry.');
-    throw new Error(err.error?.message || `API error ${res.status}`);
-  }
-  return (await res.json()).content[0].text;
-}
 </script>
 </body>
 </html>
