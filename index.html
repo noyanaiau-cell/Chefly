@@ -648,6 +648,114 @@
     }
     .dot.done { background: var(--orange); opacity: 0.4; }
 
+    /* ── Healthy toggle ── */
+    .healthy-toggle {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      border: 2px solid #E5E7EB;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all var(--transition);
+      margin-bottom: 16px;
+      background: var(--white);
+      user-select: none;
+    }
+    .healthy-toggle:hover { border-color: #22C55E; }
+    .healthy-toggle.active {
+      border-color: #22C55E;
+      background: #F0FDF4;
+      box-shadow: 0 0 0 3px rgba(34,197,94,0.12);
+    }
+    .healthy-toggle-icon { font-size: 1.5rem; }
+    .healthy-toggle-text { flex: 1; }
+    .healthy-toggle-text strong { display: block; font-size: 0.9rem; color: var(--charcoal); }
+    .healthy-toggle-text span   { font-size: 0.78rem; color: var(--gray); }
+    .toggle-switch {
+      width: 42px; height: 24px;
+      border-radius: 999px;
+      background: #E5E7EB;
+      position: relative;
+      transition: background var(--transition);
+      flex-shrink: 0;
+    }
+    .healthy-toggle.active .toggle-switch { background: #22C55E; }
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: white;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+      transition: transform var(--transition);
+    }
+    .healthy-toggle.active .toggle-switch::after { transform: translateX(18px); }
+
+    /* ── Nutrition strip on recipe cards ── */
+    .nutrition-strip {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1.5px solid #F3F4F6;
+    }
+    .nutrition-pill {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: #F9FAFB;
+      border: 1.5px solid #E5E7EB;
+      border-radius: 8px;
+      padding: 5px 10px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--charcoal);
+      flex: 1;
+      justify-content: center;
+    }
+    .nutrition-pill .nut-icon { font-size: 0.9rem; }
+    .nutrition-pill .nut-val { font-weight: 700; color: var(--charcoal); }
+    .nutrition-pill .nut-label { color: var(--gray); font-size: 0.72rem; }
+    .nutrition-pill.calories { border-color: #FED7AA; background: #FFF7ED; }
+    .nutrition-pill.calories .nut-val { color: var(--orange); }
+    .nutrition-pill.protein  { border-color: #BBF7D0; background: #F0FDF4; }
+    .nutrition-pill.protein  .nut-val { color: #15803D; }
+
+    /* ── Detail nutrition panel ── */
+    .nutrition-panel {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .nutrition-panel .nut-card {
+      flex: 1;
+      border-radius: 12px;
+      padding: 16px 14px;
+      text-align: center;
+    }
+    .nut-card.cal { background: #FFF7ED; border: 1.5px solid #FED7AA; }
+    .nut-card.pro { background: #F0FDF4; border: 1.5px solid #BBF7D0; }
+    .nut-card .nut-big { font-size: 1.6rem; font-weight: 700; display: block; }
+    .nut-card.cal .nut-big { color: var(--orange); }
+    .nut-card.pro .nut-big { color: #15803D; }
+    .nut-card .nut-unit { font-size: 0.78rem; color: var(--gray); }
+    .nut-card .nut-lbl  { font-size: 0.82rem; font-weight: 600; color: var(--charcoal); margin-top: 2px; display: block; }
+
+    /* ── Healthy badge on card ── */
+    .badge-healthy {
+      background: #DCFCE7;
+      color: #15803D;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+
     /* ── Responsive ── */
     @media (max-width: 540px) {
       .card { padding: 24px 18px; }
@@ -656,6 +764,7 @@
       .detail-title { font-size: 1.5rem; }
       .cuisine-grid { grid-template-columns: repeat(2, 1fr); }
       .cuisine-card.surprise { grid-column: span 2; }
+      .nutrition-panel { flex-direction: column; gap: 8px; }
     }
   </style>
 </head>
@@ -735,6 +844,16 @@
   <div class="card" style="max-width:520px">
     <h2>Choose a cuisine</h2>
     <p class="sub">Pick a style or let Chefly surprise you.</p>
+
+    <!-- Healthy Mode toggle -->
+    <div class="healthy-toggle" id="healthy-toggle" onclick="toggleHealthy()">
+      <span class="healthy-toggle-icon">🥗</span>
+      <div class="healthy-toggle-text">
+        <strong>Healthy Mode</strong>
+        <span>Focus on low-calorie, high-protein recipes</span>
+      </div>
+      <div class="toggle-switch"></div>
+    </div>
 
     <div class="cuisine-grid" id="cuisine-grid">
       <div class="cuisine-card" data-cuisine="Italian" onclick="selectCuisine(this)">
@@ -842,6 +961,20 @@
       </div>
 
       <div class="detail-body">
+        <!-- Nutrition panel -->
+        <div class="nutrition-panel" id="detail-nutrition" style="display:none">
+          <div class="nut-card cal">
+            <span class="nut-big" id="detail-calories">—</span>
+            <span class="nut-unit">kcal / serving</span>
+            <span class="nut-lbl">🔥 Calories</span>
+          </div>
+          <div class="nut-card pro">
+            <span class="nut-big" id="detail-protein">—</span>
+            <span class="nut-unit">g / serving</span>
+            <span class="nut-lbl">💪 Protein</span>
+          </div>
+        </div>
+
         <a id="watch-btn" class="watch-btn" target="_blank" rel="noopener">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
           Watch Cooking Guide on YouTube
@@ -880,6 +1013,7 @@
     apiKey: localStorage.getItem('chefly_key') || '',
     ingredients: [],
     cuisine: 'Any',
+    healthyMode: false,
     recipes: [],
     currentRecipe: null,
   };
@@ -966,6 +1100,11 @@
   });
 
   // ── Screen 2: Cuisine ──────────────────────────────────
+  function toggleHealthy() {
+    state.healthyMode = !state.healthyMode;
+    document.getElementById('healthy-toggle').classList.toggle('active', state.healthyMode);
+  }
+
   function goToCuisine() {
     goToScreen(2);
   }
@@ -1002,7 +1141,11 @@
     const cuisine = state.cuisine === 'Any' ? 'any cuisine' : state.cuisine;
     const ingList = state.ingredients.join(', ');
 
-    const userMsg = `Ingredients I have: ${ingList}\nPreferred cuisine: ${cuisine}\n\nPlease suggest exactly 5 recipes I can make with these ingredients.`;
+    const healthyNote = state.healthyMode
+      ? '\nIMPORTANT: The user wants HEALTHY recipes. Prioritise low-calorie, high-protein, nutritious meals. Avoid heavy cream, deep-frying, or excess sugar.'
+      : '';
+
+    const userMsg = `Ingredients I have: ${ingList}\nPreferred cuisine: ${cuisine}${healthyNote}\n\nPlease suggest exactly 5 recipes I can make with these ingredients.`;
 
     try {
       const data = await claudeCall(
@@ -1013,6 +1156,8 @@
 - difficulty (Easy / Medium / Hard)
 - time (e.g., "20 mins")
 - matchScore (how well it matches the ingredients, 1-100)
+- calories (estimated calories per serving as a number, e.g. 420)
+- protein (estimated grams of protein per serving as a number, e.g. 28)
 - youtubeSearchQuery (a specific YouTube search string to find a cooking tutorial for this exact recipe)
 Return ONLY a valid JSON array of 5 recipe objects. No markdown, no extra text.`,
         userMsg
@@ -1033,7 +1178,8 @@ Return ONLY a valid JSON array of 5 recipe objects. No markdown, no extra text.`
       content.style.display= 'block';
 
       const heading = document.getElementById('recipes-heading');
-      heading.textContent = `5 recipes using ${state.ingredients.slice(0,3).map(cap).join(', ')}${state.ingredients.length > 3 ? ' & more' : ''}`;
+      const healthyLabel = state.healthyMode ? ' 🥗 Healthy' : '';
+      heading.textContent = `5${healthyLabel} recipes using ${state.ingredients.slice(0,3).map(cap).join(', ')}${state.ingredients.length > 3 ? ' & more' : ''}`;
 
     } catch (err) {
       loader.style.display = 'none';
@@ -1051,6 +1197,20 @@ Return ONLY a valid JSON array of 5 recipe objects. No markdown, no extra text.`
       const card = document.createElement('div');
       card.className = 'recipe-card';
       card.style.animationDelay = `${i * 0.09}s`;
+      const healthyBadge = state.healthyMode ? `<span class="badge-healthy">🥗 Healthy</span>` : '';
+      const nutritionStrip = (r.calories || r.protein) ? `
+        <div class="nutrition-strip">
+          <div class="nutrition-pill calories">
+            <span class="nut-icon">🔥</span>
+            <span class="nut-val">${r.calories ?? '—'}</span>
+            <span class="nut-label">kcal</span>
+          </div>
+          <div class="nutrition-pill protein">
+            <span class="nut-icon">💪</span>
+            <span class="nut-val">${r.protein ?? '—'}g</span>
+            <span class="nut-label">protein</span>
+          </div>
+        </div>` : '';
       card.innerHTML = `
         <div class="recipe-card-top">
           <div class="recipe-name">${r.name}</div>
@@ -1059,6 +1219,7 @@ Return ONLY a valid JSON array of 5 recipe objects. No markdown, no extra text.`
         <p class="recipe-desc">${r.description}</p>
         <div class="recipe-meta">
           <span class="badge ${badgeClass}">${r.difficulty}</span>
+          ${healthyBadge}
           <span class="meta-item">⏱ ${r.time}</span>
           <span class="meta-item">🌍 ${r.cuisine}</span>
         </div>
@@ -1070,7 +1231,8 @@ Return ONLY a valid JSON array of 5 recipe objects. No markdown, no extra text.`
           <div class="match-bar">
             <div class="match-fill" style="width:0%" data-target="${r.matchScore}%"></div>
           </div>
-        </div>`;
+        </div>
+        ${nutritionStrip}`;
       card.addEventListener('click', () => openRecipe(r));
       grid.appendChild(card);
     });
@@ -1097,6 +1259,16 @@ Return ONLY a valid JSON array of 5 recipe objects. No markdown, no extra text.`
     document.getElementById('detail-time').textContent = '⏱ ' + recipe.time;
     document.getElementById('detail-difficulty').textContent = '📊 ' + recipe.difficulty;
     document.getElementById('detail-match').textContent = '✅ ' + recipe.matchScore + '% match';
+
+    // Nutrition panel
+    const nutPanel = document.getElementById('detail-nutrition');
+    if (recipe.calories || recipe.protein) {
+      document.getElementById('detail-calories').textContent = recipe.calories ?? '—';
+      document.getElementById('detail-protein').textContent  = recipe.protein  ?? '—';
+      nutPanel.style.display = 'flex';
+    } else {
+      nutPanel.style.display = 'none';
+    }
 
     const ytUrl = 'https://www.youtube.com/results?search_query=' + encodeURIComponent(recipe.youtubeSearchQuery);
     document.getElementById('watch-btn').href = ytUrl;
