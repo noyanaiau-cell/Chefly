@@ -1,673 +1,447 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Chefly — Cook Smarter With What You Have</title>
-  <meta name="description" content="Chefly is your AI-powered recipe assistant. Enter the ingredients you have and get 5 personalised recipes instantly." />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --orange:       #E8650A;
-      --orange-light: #FF8533;
-      --orange-pale:  #FFF0E0;
-      --cream:        #FFF8F0;
-      --charcoal:     #1A1A1A;
-      --gray:         #6B7280;
-      --gray-light:   #F3F4F6;
-      --white:        #FFFFFF;
-      --green:        #22C55E;
-      --radius:       16px;
-      --shadow:       0 4px 24px rgba(232,101,10,.12);
-      --shadow-lg:    0 12px 48px rgba(232,101,10,.18);
-    }
-    html { scroll-behavior: smooth; }
-    body { font-family: 'Inter', sans-serif; background: var(--white); color: var(--charcoal); overflow-x: hidden; }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Chefly — Your AI Culinary Companion</title>
+<meta name="description" content="Chefly turns the ingredients you already have into five beautiful, personalised recipes — drawing on flavours from every corner of the world." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Hanken+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --ink:        #221A14;
+    --ink-soft:   #4A3F36;
+    --paper:      #F6EEE1;
+    --paper-2:    #EFE3D0;
+    --paper-card: #FCF7EE;
+    --terracotta: #BE4D2B;
+    --terracotta-d:#9E3C1F;
+    --saffron:    #D9962F;
+    --olive:      #586246;
+    --olive-d:    #3F472F;
+    --line:       rgba(34,26,20,.14);
+    --line-soft:  rgba(34,26,20,.08);
+    --serif: 'Fraunces', Georgia, serif;
+    --sans:  'Hanken Grotesk', system-ui, sans-serif;
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--sans); color: var(--ink); background: var(--paper);
+    line-height: 1.6; -webkit-font-smoothing: antialiased; overflow-x: hidden;
+  }
+  /* warm gradient-mesh atmosphere */
+  body::before {
+    content: ''; position: fixed; inset: 0; z-index: -2; pointer-events: none;
+    background:
+      radial-gradient(60% 50% at 12% 8%, rgba(217,150,47,.18), transparent 60%),
+      radial-gradient(55% 45% at 92% 12%, rgba(190,77,43,.14), transparent 60%),
+      radial-gradient(60% 60% at 80% 95%, rgba(88,98,70,.14), transparent 60%),
+      var(--paper);
+  }
+  /* film grain */
+  body::after {
+    content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: .5;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.045'/%3E%3C/svg%3E");
+  }
+  a { color: inherit; text-decoration: none; }
+  ::selection { background: var(--terracotta); color: var(--paper); }
 
-    /* ── NAV ── */
-    nav {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      background: rgba(255,255,255,.92); backdrop-filter: blur(12px);
-      border-bottom: 1px solid rgba(232,101,10,.08);
-      padding: 0 40px; height: 68px;
-      display: flex; align-items: center; justify-content: space-between;
-      transition: box-shadow .3s;
-    }
-    nav.scrolled { box-shadow: 0 2px 20px rgba(0,0,0,.08); }
-    .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-    .nav-logo-icon {
-      width: 38px; height: 38px; background: var(--orange); border-radius: 10px;
-      display: flex; align-items: center; justify-content: center; font-size: 20px;
-      box-shadow: 0 3px 10px rgba(232,101,10,.35);
-    }
-    .nav-logo-text { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; color: var(--orange); }
-    .nav-links { display: flex; align-items: center; gap: 32px; }
-    .nav-links a { text-decoration: none; font-size: .9rem; font-weight: 500; color: var(--gray); transition: color .2s; }
-    .nav-links a:hover { color: var(--orange); }
-    .nav-cta {
-      background: var(--orange); color: white; padding: 9px 22px; border-radius: 999px;
-      text-decoration: none; font-size: .88rem; font-weight: 600;
-      box-shadow: 0 3px 12px rgba(232,101,10,.35); transition: all .2s;
-    }
-    .nav-cta:hover { background: var(--orange-light); transform: translateY(-1px); color: white; }
-    .nav-hamburger { display: none; background: none; border: none; cursor: pointer; font-size: 1.4rem; }
+  .wrap { width: min(1180px, 100% - 48px); margin-inline: auto; }
 
-    /* ── HERO ── */
-    .hero {
-      min-height: 100vh; padding: 120px 40px 80px;
-      display: flex; align-items: center; justify-content: center;
-      position: relative; overflow: hidden;
-      background: linear-gradient(160deg, #FFF8F0 0%, #FFFFFF 50%, #FFF3E8 100%);
-    }
-    .hero-bg {
-      position: absolute; inset: 0; pointer-events: none; overflow: hidden;
-    }
-    .hero-blob {
-      position: absolute; border-radius: 50%;
-      filter: blur(80px); opacity: .3;
-    }
-    .hero-blob-1 { width: 600px; height: 600px; background: #FFCFA0; top: -100px; right: -100px; }
-    .hero-blob-2 { width: 400px; height: 400px; background: #FFE4CC; bottom: -80px; left: -80px; }
-    .hero-blob-3 { width: 300px; height: 300px; background: #FFA95A; top: 40%; left: 40%; }
+  /* ── NAV ── */
+  nav {
+    position: fixed; inset: 0 0 auto 0; z-index: 100; height: 72px;
+    display: flex; align-items: center;
+    transition: background .4s ease, box-shadow .4s ease, border-color .4s;
+    border-bottom: 1px solid transparent;
+  }
+  nav.scrolled {
+    background: rgba(246,238,225,.82); backdrop-filter: blur(14px) saturate(1.4);
+    border-bottom-color: var(--line-soft);
+  }
+  .nav-inner { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+  .brand { display: flex; align-items: baseline; gap: 2px; font-family: var(--serif); font-weight: 600; font-size: 1.6rem; letter-spacing: -.02em; }
+  .brand b { color: var(--terracotta); font-weight: 600; }
+  .brand .dot { color: var(--saffron); }
+  .nav-links { display: flex; align-items: center; gap: 36px; }
+  .nav-links a:not(.nav-cta) { font-size: .9rem; font-weight: 500; color: var(--ink-soft); position: relative; }
+  .nav-links a:not(.nav-cta)::after { content: ''; position: absolute; left: 0; bottom: -5px; height: 1.5px; width: 0; background: var(--terracotta); transition: width .3s ease; }
+  .nav-links a:not(.nav-cta):hover { color: var(--ink); }
+  .nav-links a:not(.nav-cta):hover::after { width: 100%; }
+  .nav-cta {
+    font-size: .9rem; font-weight: 600; color: var(--paper);
+    background: var(--ink); padding: 11px 22px; border-radius: 999px;
+    transition: transform .3s cubic-bezier(.34,1.56,.64,1), background .3s;
+  }
+  .nav-cta:hover { background: var(--terracotta); transform: translateY(-2px); }
+  .nav-burger { display: none; background: none; border: none; font-size: 1.5rem; color: var(--ink); cursor: pointer; }
 
-    .hero-inner {
-      position: relative; z-index: 1; display: grid;
-      grid-template-columns: 1fr 1fr; gap: 80px; align-items: center;
-      max-width: 1200px; width: 100%;
-    }
-    .hero-badge {
-      display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px;
-      background: var(--orange-pale); border: 1.5px solid rgba(232,101,10,.3);
-      border-radius: 999px; font-size: .8rem; font-weight: 600; color: var(--orange);
-      margin-bottom: 24px;
-    }
-    .hero-badge .dot { width: 6px; height: 6px; background: var(--orange); border-radius: 50%; animation: blink 1.5s ease-in-out infinite; }
-    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+  /* ── HERO ── */
+  .hero { padding: 150px 0 70px; position: relative; }
+  .hero-grid { display: grid; grid-template-columns: 1.05fr .95fr; gap: 56px; align-items: center; }
+  .kicker {
+    display: inline-flex; align-items: center; gap: 9px; font-size: .76rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .22em; color: var(--terracotta-d);
+    border: 1px solid var(--line); border-radius: 999px; padding: 7px 15px; background: rgba(252,247,238,.6);
+  }
+  .kicker .pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--terracotta); box-shadow: 0 0 0 0 rgba(190,77,43,.5); animation: pulse 2.4s infinite; }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(190,77,43,.5); } 70% { box-shadow: 0 0 0 9px rgba(190,77,43,0); } 100% { box-shadow: 0 0 0 0 rgba(190,77,43,0); } }
+  .hero h1 {
+    font-family: var(--serif); font-weight: 350; font-size: clamp(3rem, 6.4vw, 5.4rem);
+    line-height: .98; letter-spacing: -.025em; margin: 26px 0 0; color: var(--ink);
+  }
+  .hero h1 em { font-style: italic; font-weight: 500; color: var(--terracotta); position: relative; }
+  .hero h1 .swash { display: inline-block; }
+  .hero-sub { font-size: 1.18rem; color: var(--ink-soft); max-width: 30ch; margin: 26px 0 0; font-weight: 400; }
+  .hero-actions { display: flex; gap: 14px; margin-top: 38px; flex-wrap: wrap; }
+  .btn { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; font-size: 1rem; padding: 15px 28px; border-radius: 999px; cursor: pointer; transition: transform .3s cubic-bezier(.34,1.56,.64,1), box-shadow .3s, background .3s, color .3s; border: 1px solid transparent; }
+  .btn-primary { background: var(--terracotta); color: var(--paper); box-shadow: 0 12px 30px -10px rgba(190,77,43,.7); }
+  .btn-primary:hover { transform: translateY(-3px); background: var(--terracotta-d); box-shadow: 0 18px 40px -12px rgba(190,77,43,.8); }
+  .btn-ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+  .btn-ghost:hover { border-color: var(--ink); transform: translateY(-3px); }
+  .hero-meta { display: flex; gap: 34px; margin-top: 46px; }
+  .hero-meta .m-num { font-family: var(--serif); font-size: 2rem; font-weight: 500; line-height: 1; color: var(--ink); }
+  .hero-meta .m-lbl { font-size: .82rem; color: var(--ink-soft); margin-top: 7px; }
+  .hero-meta .sep { width: 1px; background: var(--line); }
 
-    .hero-title {
-      font-family: 'Playfair Display', serif; font-size: 3.6rem; font-weight: 900;
-      line-height: 1.1; color: var(--charcoal); margin-bottom: 20px;
-    }
-    .hero-title span { color: var(--orange); font-style: italic; }
-    .hero-sub { font-size: 1.1rem; color: var(--gray); line-height: 1.7; margin-bottom: 36px; max-width: 480px; }
+  /* hero visual — stacked editorial recipe plate */
+  .hero-art { position: relative; height: 520px; }
+  .plate {
+    position: absolute; inset: 0; margin: auto; width: 380px; height: 380px; border-radius: 50%;
+    background:
+      radial-gradient(circle at 38% 32%, #fff7ec, #f3e4cd 55%, #e7d4b6 100%);
+    box-shadow: inset 0 0 0 1px rgba(34,26,20,.06), inset 0 14px 40px rgba(34,26,20,.06), 0 40px 80px -30px rgba(34,26,20,.35);
+    top: 50%; left: 50%; transform: translate(-50%,-50%);
+    display: grid; place-items: center;
+    animation: spinSlow 60s linear infinite;
+  }
+  @keyframes spinSlow { to { transform: translate(-50%,-50%) rotate(360deg); } }
+  .plate::before { content: ''; position: absolute; inset: 26px; border-radius: 50%; border: 1px dashed rgba(34,26,20,.12); }
+  .plate-emoji { font-size: 7rem; filter: drop-shadow(0 10px 18px rgba(0,0,0,.18)); animation: spinSlowR 60s linear infinite; }
+  @keyframes spinSlowR { to { transform: rotate(-360deg); } }
+  .float-card {
+    position: absolute; background: var(--paper-card); border: 1px solid var(--line-soft);
+    border-radius: 16px; padding: 14px 16px; box-shadow: 0 24px 50px -22px rgba(34,26,20,.45);
+    backdrop-filter: blur(4px);
+  }
+  .fc-1 { top: 18px; left: -6px; width: 210px; animation: bob 6s ease-in-out infinite; }
+  .fc-2 { bottom: 40px; right: -10px; width: 200px; animation: bob 6s ease-in-out infinite 1.4s; }
+  .fc-3 { bottom: -6px; left: 60px; animation: bob 6s ease-in-out infinite .7s; }
+  @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+  .fc-title { font-family: var(--serif); font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 7px; }
+  .fc-row { display: flex; gap: 6px; margin-top: 8px; }
+  .tag { font-size: .68rem; font-weight: 600; padding: 3px 9px; border-radius: 999px; }
+  .tag.easy { background: #E7EDDD; color: var(--olive-d); }
+  .tag.time { background: #F6E6CB; color: #8A5A12; }
+  .fc-bar { height: 5px; border-radius: 99px; background: #E8DAC2; margin-top: 10px; overflow: hidden; }
+  .fc-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--saffron), var(--terracotta)); }
+  .fc-3 { display: flex; align-items: center; gap: 10px; }
+  .fc-3 .heart { font-size: 1.3rem; }
+  .fc-3 small { display: block; color: var(--ink-soft); font-size: .68rem; }
+  .fc-3 b { font-family: var(--serif); font-size: .92rem; }
 
-    .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; }
-    .btn-hero-primary {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: var(--orange); color: white; padding: 15px 30px;
-      border-radius: 999px; font-weight: 700; font-size: 1rem; text-decoration: none;
-      box-shadow: 0 6px 24px rgba(232,101,10,.4); transition: all .25s;
-    }
-    .btn-hero-primary:hover { background: var(--orange-light); transform: translateY(-3px); box-shadow: 0 10px 32px rgba(232,101,10,.5); color: white; }
-    .btn-hero-secondary {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: white; color: var(--charcoal); padding: 15px 30px;
-      border-radius: 999px; font-weight: 600; font-size: 1rem; text-decoration: none;
-      border: 2px solid #E5E7EB; transition: all .25s;
-    }
-    .btn-hero-secondary:hover { border-color: var(--orange); color: var(--orange); transform: translateY(-2px); }
+  /* ── TICKER ── */
+  .ticker { border-block: 1px solid var(--line); padding: 18px 0; margin-top: 30px; overflow: hidden;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+            mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+  .ticker-track { display: flex; gap: 14px; width: max-content; animation: scroll 40s linear infinite; }
+  .ticker:hover .ticker-track { animation-play-state: paused; }
+  @keyframes scroll { to { transform: translateX(-50%); } }
+  .cuisine-pill { display: inline-flex; align-items: center; gap: 9px; font-size: .92rem; font-weight: 500; color: var(--ink-soft); white-space: nowrap; padding: 6px 4px; }
+  .cuisine-pill img { width: 24px; height: 17px; object-fit: cover; border-radius: 3px; box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
+  .cuisine-pill .star { color: var(--saffron); }
 
-    .hero-stats { display: flex; gap: 32px; margin-top: 44px; }
-    .stat { }
-    .stat-num { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700; color: var(--orange); }
-    .stat-label { font-size: .78rem; color: var(--gray); margin-top: 2px; }
+  /* ── SECTION SHELL ── */
+  section { padding: 100px 0; }
+  .sec-head { max-width: 620px; }
+  .sec-eyebrow { font-size: .76rem; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; color: var(--terracotta-d); }
+  .sec-title { font-family: var(--serif); font-weight: 350; font-size: clamp(2.1rem, 4vw, 3.2rem); line-height: 1.05; letter-spacing: -.02em; margin-top: 16px; }
+  .sec-title em { font-style: italic; color: var(--olive); }
+  .sec-lead { color: var(--ink-soft); font-size: 1.08rem; margin-top: 18px; }
 
-    /* Hero visual */
-    .hero-visual { position: relative; }
-    .hero-phone {
-      background: white; border-radius: 28px; box-shadow: 0 20px 80px rgba(0,0,0,.15);
-      overflow: hidden; border: 8px solid white;
-      outline: 1px solid rgba(0,0,0,.08); transform: rotate(2deg);
-      animation: float 5s ease-in-out infinite;
-    }
-    @keyframes float { 0%,100% { transform: rotate(2deg) translateY(0); } 50% { transform: rotate(2deg) translateY(-12px); } }
-    .phone-header { background: var(--orange); padding: 20px 20px 16px; color: white; }
-    .phone-header-logo { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; }
-    .phone-header-sub  { font-size: .7rem; opacity: .8; margin-top: 2px; }
-    .phone-body { padding: 16px; background: var(--cream); }
-    .phone-card {
-      background: white; border-radius: 12px; padding: 14px;
-      box-shadow: 0 2px 12px rgba(232,101,10,.08); margin-bottom: 10px;
-    }
-    .phone-recipe-name { font-family: 'Playfair Display', serif; font-size: .95rem; font-weight: 600; margin-bottom: 4px; }
-    .phone-recipe-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
-    .phone-chip { font-size: .62rem; padding: 2px 7px; border-radius: 999px; font-weight: 600; }
-    .phone-chip.easy { background: #DCFCE7; color: #15803D; }
-    .phone-chip.time { background: var(--orange-pale); color: var(--orange); }
-    .phone-chip.cal  { background: #FFF7ED; color: var(--orange); }
-    .phone-bar { height: 4px; background: #F3F4F6; border-radius: 999px; overflow: hidden; }
-    .phone-bar-fill { height: 100%; background: linear-gradient(90deg, var(--orange), var(--orange-light)); border-radius: 999px; }
-    .phone-nut { display: flex; gap: 6px; margin-top: 8px; }
-    .phone-nut-pill { flex: 1; text-align: center; padding: 4px; border-radius: 6px; font-size: .6rem; font-weight: 600; }
-    .phone-nut-pill.cal-pill { background: #FFF7ED; color: var(--orange); }
-    .phone-nut-pill.pro-pill { background: #F0FDF4; color: #15803D; }
+  /* ── HOW ── */
+  .steps { display: grid; grid-template-columns: repeat(3,1fr); gap: 2px; margin-top: 60px; border: 1px solid var(--line); border-radius: 20px; overflow: hidden; background: var(--line); }
+  .step { background: var(--paper-card); padding: 40px 34px; position: relative; transition: background .35s; }
+  .step:hover { background: #fff; }
+  .step-n { font-family: var(--serif); font-size: 3.4rem; font-weight: 300; font-style: italic; color: var(--terracotta); line-height: 1; }
+  .step h3 { font-family: var(--serif); font-size: 1.4rem; font-weight: 600; margin: 18px 0 10px; }
+  .step p { color: var(--ink-soft); font-size: .96rem; }
+  .step-ico { position: absolute; top: 36px; right: 32px; font-size: 1.6rem; opacity: .9; }
 
-    .hero-float-card {
-      position: absolute; background: white; border-radius: 14px;
-      padding: 12px 16px; box-shadow: 0 8px 32px rgba(0,0,0,.12);
-      font-size: .8rem; display: flex; align-items: center; gap: 10px;
-    }
-    .hero-float-card-1 { bottom: 30px; left: -40px; animation: float2 4s ease-in-out infinite; }
-    .hero-float-card-2 { top: 40px;   right: -30px; animation: float2 4s ease-in-out infinite .8s; }
-    @keyframes float2 { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-    .float-icon { font-size: 1.6rem; }
-    .float-text strong { display: block; font-size: .8rem; font-weight: 700; color: var(--charcoal); }
-    .float-text span   { font-size: .7rem; color: var(--gray); }
+  /* ── FEATURES BENTO ── */
+  .bento { display: grid; grid-template-columns: repeat(3,1fr); grid-auto-rows: 1fr; gap: 18px; margin-top: 60px; }
+  .cell { background: var(--paper-card); border: 1px solid var(--line-soft); border-radius: 20px; padding: 30px; transition: transform .35s cubic-bezier(.34,1.4,.64,1), box-shadow .35s, border-color .35s; position: relative; overflow: hidden; }
+  .cell:hover { transform: translateY(-5px); box-shadow: 0 28px 50px -28px rgba(34,26,20,.4); border-color: var(--line); }
+  .cell-ico { width: 50px; height: 50px; display: grid; place-items: center; border-radius: 14px; font-size: 1.5rem; background: var(--paper-2); }
+  .cell h3 { font-family: var(--serif); font-size: 1.5rem; font-weight: 600; margin: 20px 0 8px; }
+  .cell p { color: var(--ink-soft); font-size: .96rem; }
+  .cell.wide { grid-column: span 2; background: linear-gradient(135deg, var(--olive), var(--olive-d)); color: var(--paper); border-color: transparent; }
+  .cell.wide .cell-ico { background: rgba(255,255,255,.16); }
+  .cell.wide p { color: rgba(246,238,225,.82); }
+  .cell.dark { background: var(--ink); color: var(--paper); border-color: transparent; }
+  .cell.dark .cell-ico { background: rgba(255,255,255,.12); }
+  .cell.dark p { color: rgba(246,238,225,.78); }
 
-    /* ── SECTION SHARED ── */
-    section { padding: 100px 40px; }
-    .section-inner { max-width: 1200px; margin: 0 auto; }
-    .section-label {
-      display: inline-block; font-size: .78rem; font-weight: 700; letter-spacing: 1.5px;
-      text-transform: uppercase; color: var(--orange); margin-bottom: 12px;
-    }
-    .section-title {
-      font-family: 'Playfair Display', serif; font-size: 2.4rem;
-      font-weight: 700; line-height: 1.2; margin-bottom: 16px; color: var(--charcoal);
-    }
-    .section-title span { color: var(--orange); font-style: italic; }
-    .section-sub { font-size: 1rem; color: var(--gray); max-width: 560px; line-height: 1.7; }
+  /* ── QUOTE ── */
+  .quote-sec { background: var(--ink); color: var(--paper); border-radius: 28px; padding: 90px 8%; margin: 0 auto; position: relative; overflow: hidden; }
+  .quote-sec::before { content: '“'; position: absolute; top: -40px; left: 30px; font-family: var(--serif); font-size: 18rem; color: rgba(217,150,47,.16); line-height: 1; }
+  .quote-sec blockquote { font-family: var(--serif); font-weight: 300; font-size: clamp(1.7rem, 3.4vw, 2.9rem); line-height: 1.25; letter-spacing: -.01em; position: relative; max-width: 18ch; }
+  .quote-sec blockquote em { font-style: italic; color: var(--saffron); }
+  .quote-by { margin-top: 30px; display: flex; align-items: center; gap: 14px; }
+  .quote-av { width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(135deg, var(--terracotta), var(--saffron)); display: grid; place-items: center; font-size: 1.3rem; }
+  .quote-by b { font-weight: 600; } .quote-by span { display: block; color: rgba(246,238,225,.6); font-size: .85rem; }
 
-    /* ── HOW IT WORKS ── */
-    .how-it-works { background: var(--charcoal); color: white; }
-    .how-it-works .section-title { color: white; }
-    .how-it-works .section-sub   { color: #9CA3AF; }
-    .how-it-works .section-label { color: #F97316; }
+  /* ── CTA ── */
+  .cta { text-align: center; padding: 110px 0; }
+  .cta h2 { font-family: var(--serif); font-weight: 350; font-size: clamp(2.4rem, 5vw, 4rem); line-height: 1.02; letter-spacing: -.02em; }
+  .cta h2 em { font-style: italic; color: var(--terracotta); }
+  .cta p { color: var(--ink-soft); font-size: 1.1rem; margin: 20px auto 36px; max-width: 44ch; }
 
-    .steps-grid {
-      display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin-top: 60px;
-      position: relative;
-    }
-    .steps-grid::before {
-      content: ''; position: absolute; top: 32px; left: 10%; right: 10%; height: 2px;
-      background: linear-gradient(90deg, var(--orange), var(--orange-light));
-      z-index: 0;
-    }
-    .step-block { text-align: center; padding: 0 24px; position: relative; z-index: 1; }
-    .step-number {
-      width: 64px; height: 64px; border-radius: 50%; background: var(--orange);
-      color: white; font-size: 1.3rem; font-weight: 700; display: flex;
-      align-items: center; justify-content: center; margin: 0 auto 20px;
-      box-shadow: 0 4px 20px rgba(232,101,10,.5); font-family: 'Playfair Display', serif;
-    }
-    .step-emoji { font-size: 1.5rem; margin-bottom: 8px; display: block; }
-    .step-title { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 600; color: white; margin-bottom: 8px; }
-    .step-desc  { font-size: .83rem; color: #9CA3AF; line-height: 1.6; }
+  /* ── FOOTER ── */
+  footer { border-top: 1px solid var(--line); padding: 64px 0 40px; }
+  .foot-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; }
+  .foot-brand p { color: var(--ink-soft); font-size: .94rem; max-width: 32ch; margin-top: 14px; }
+  .foot-col h4 { font-size: .78rem; text-transform: uppercase; letter-spacing: .16em; color: var(--ink); margin-bottom: 16px; }
+  .foot-col a { display: block; color: var(--ink-soft); font-size: .94rem; padding: 5px 0; transition: color .2s, padding-left .2s; }
+  .foot-col a:hover { color: var(--terracotta); padding-left: 5px; }
+  .foot-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: 50px; padding-top: 26px; border-top: 1px solid var(--line-soft); font-size: .85rem; color: var(--ink-soft); flex-wrap: wrap; gap: 12px; }
 
-    /* ── FEATURES ── */
-    .features { background: var(--cream); }
-    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 60px; }
-    .feature-card {
-      background: white; border-radius: 20px; padding: 32px 28px;
-      box-shadow: var(--shadow); border: 1.5px solid transparent;
-      transition: all .3s;
-    }
-    .feature-card:hover { border-color: var(--orange); transform: translateY(-6px); box-shadow: var(--shadow-lg); }
-    .feature-icon {
-      width: 56px; height: 56px; background: var(--orange-pale);
-      border-radius: 14px; display: flex; align-items: center; justify-content: center;
-      font-size: 1.6rem; margin-bottom: 20px;
-    }
-    .feature-title { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 600; margin-bottom: 10px; }
-    .feature-desc  { font-size: .88rem; color: var(--gray); line-height: 1.7; }
+  /* reveal on scroll */
+  .reveal { opacity: 0; transform: translateY(26px); transition: opacity .8s cubic-bezier(.22,.61,.36,1), transform .8s cubic-bezier(.22,.61,.36,1); }
+  .reveal.in { opacity: 1; transform: none; }
+  /* hero load stagger */
+  .rise { opacity: 0; transform: translateY(20px); animation: rise .9s cubic-bezier(.22,.61,.36,1) forwards; }
+  @keyframes rise { to { opacity: 1; transform: none; } }
 
-    /* ── CUISINES ── */
-    .cuisines { background: white; }
-    .cuisines-row { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-top: 50px; }
-    .cuisine-pill {
-      display: flex; align-items: center; gap: 10px; padding: 14px 24px;
-      border: 2px solid #E5E7EB; border-radius: 999px; cursor: default;
-      transition: all .25s; background: white;
-    }
-    .cuisine-pill:hover { border-color: var(--orange); background: var(--orange-pale); transform: translateY(-3px); box-shadow: var(--shadow); }
-    .cuisine-pill .flag { font-size: 1.5rem; }
-    .cuisine-pill .name { font-size: .9rem; font-weight: 600; }
-
-    /* ── TESTIMONIALS ── */
-    .testimonials { background: var(--cream); }
-    .testi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 60px; }
-    .testi-card {
-      background: white; border-radius: 20px; padding: 28px;
-      box-shadow: var(--shadow); border-left: 4px solid var(--orange);
-    }
-    .testi-stars { color: #F59E0B; font-size: 1rem; margin-bottom: 14px; }
-    .testi-text  { font-size: .9rem; color: var(--charcoal); line-height: 1.7; font-style: italic; margin-bottom: 20px; }
-    .testi-author { display: flex; align-items: center; gap: 12px; }
-    .testi-avatar {
-      width: 40px; height: 40px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--orange), var(--orange-light));
-      display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;
-    }
-    .testi-name  { font-size: .88rem; font-weight: 600; }
-    .testi-role  { font-size: .75rem; color: var(--gray); }
-
-    /* ── CTA BAND ── */
-    .cta-band {
-      background: linear-gradient(135deg, var(--orange) 0%, #FF9A4D 100%);
-      padding: 100px 40px; text-align: center; position: relative; overflow: hidden;
-    }
-    .cta-band::before, .cta-band::after {
-      content: ''; position: absolute; border-radius: 50%;
-      background: rgba(255,255,255,.08);
-    }
-    .cta-band::before { width: 500px; height: 500px; top: -200px; right: -100px; }
-    .cta-band::after  { width: 300px; height: 300px; bottom: -100px; left: -50px; }
-    .cta-band h2 { font-family: 'Playfair Display', serif; font-size: 2.8rem; font-weight: 800; color: white; margin-bottom: 16px; position: relative; z-index: 1; }
-    .cta-band p  { font-size: 1.05rem; color: rgba(255,255,255,.85); max-width: 520px; margin: 0 auto 36px; line-height: 1.7; position: relative; z-index: 1; }
-    .btn-cta-white {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: white; color: var(--orange); padding: 16px 36px; border-radius: 999px;
-      font-weight: 700; font-size: 1rem; text-decoration: none; position: relative; z-index: 1;
-      box-shadow: 0 8px 32px rgba(0,0,0,.15); transition: all .25s;
-    }
-    .btn-cta-white:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,.2); color: var(--orange); }
-
-    /* ── FOOTER ── */
-    footer { background: var(--charcoal); color: white; padding: 60px 40px 30px; }
-    .footer-inner { max-width: 1200px; margin: 0 auto; }
-    .footer-top {
-      display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 60px; margin-bottom: 50px;
-    }
-    .footer-brand-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-    .footer-brand-icon { width: 36px; height: 36px; background: var(--orange); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-    .footer-brand-name { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 700; color: var(--orange); }
-    .footer-brand-desc { font-size: .85rem; color: #9CA3AF; line-height: 1.7; max-width: 260px; }
-    .footer-col h4 { font-size: .85rem; font-weight: 700; color: white; margin-bottom: 16px; letter-spacing: .5px; text-transform: uppercase; }
-    .footer-col ul { list-style: none; }
-    .footer-col ul li { margin-bottom: 10px; }
-    .footer-col ul li a { color: #9CA3AF; text-decoration: none; font-size: .85rem; transition: color .2s; }
-    .footer-col ul li a:hover { color: var(--orange); }
-    .footer-bottom { border-top: 1px solid rgba(255,255,255,.08); padding-top: 24px; display: flex; align-items: center; justify-content: space-between; }
-    .footer-copy  { font-size: .8rem; color: #6B7280; }
-    .footer-badge { font-size: .8rem; color: #6B7280; display: flex; align-items: center; gap: 6px; }
-    .footer-badge span { color: var(--orange); }
-
-    /* ── Mobile ── */
-    @media (max-width: 1024px) {
-      .hero-inner     { grid-template-columns: 1fr; gap: 60px; text-align: center; }
-      .hero-title     { font-size: 2.8rem; }
-      .hero-sub       { margin: 0 auto 36px; }
-      .hero-actions   { justify-content: center; }
-      .hero-stats     { justify-content: center; }
-      .hero-visual    { display: none; }
-      .steps-grid     { grid-template-columns: repeat(2, 1fr); gap: 40px; }
-      .steps-grid::before { display: none; }
-      .features-grid  { grid-template-columns: repeat(2, 1fr); }
-      .testi-grid     { grid-template-columns: 1fr; }
-      .footer-top     { grid-template-columns: 1fr 1fr; gap: 40px; }
-    }
-    @media (max-width: 640px) {
-      section { padding: 70px 20px; }
-      nav     { padding: 0 20px; }
-      .nav-links  { display: none; }
-      .nav-hamburger { display: block; }
-      .hero   { padding: 100px 20px 60px; }
-      .hero-title { font-size: 2.2rem; }
-      .section-title { font-size: 1.8rem; }
-      .steps-grid    { grid-template-columns: 1fr; }
-      .features-grid { grid-template-columns: 1fr; }
-      .footer-top    { grid-template-columns: 1fr; gap: 30px; }
-      .footer-bottom { flex-direction: column; gap: 10px; text-align: center; }
-      .cta-band h2   { font-size: 2rem; }
-      .cuisines-row  { gap: 10px; }
-    }
-    /* World cuisine showcase */
-    .world-strip { margin-top: 40px; overflow: hidden; position: relative; max-width: 520px; -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent); mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent); }
-    .world-strip-label { font-size: .76rem; font-weight: 600; color: var(--gray); letter-spacing: .4px; margin-bottom: 10px; text-transform: uppercase; }
-    .world-track { display: flex; gap: 10px; width: max-content; animation: worldScroll 34s linear infinite; }
-    .world-strip:hover .world-track { animation-play-state: paused; }
-    @keyframes worldScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-    .world-pill { display: flex; align-items: center; gap: 7px; background: #fff; border: 1.5px solid rgba(232,101,10,.18); border-radius: 999px; padding: 7px 14px; font-size: .82rem; font-weight: 500; white-space: nowrap; box-shadow: 0 2px 8px rgba(232,101,10,.06); }
-    .world-pill .flag { width: 22px; height: 16px; object-fit: cover; border-radius: 3px; box-shadow: 0 0 0 1px rgba(0,0,0,.06); }
-    @media (max-width: 980px) { .world-strip { margin-left: auto; margin-right: auto; } }
-  </style>
+  @media (max-width: 940px) {
+    .hero-grid { grid-template-columns: 1fr; gap: 10px; }
+    .hero-art { height: 420px; order: -1; }
+    .steps, .bento { grid-template-columns: 1fr; }
+    .cell.wide { grid-column: span 1; }
+    .foot-grid { grid-template-columns: 1fr 1fr; }
+    .nav-links { display: none; }
+    .nav-burger { display: block; }
+  }
+  @media (max-width: 520px) {
+    .hero-meta { gap: 20px; } .hero-art { height: 360px; }
+    .plate { width: 300px; height: 300px; } .plate-emoji { font-size: 5.4rem; }
+    .foot-grid { grid-template-columns: 1fr; }
+  }
+</style>
 </head>
 <body>
 
-<!-- ── NAV ── -->
-<nav id="main-nav">
-  <a href="index.html" class="nav-logo">
-    <div class="nav-logo-icon">👨‍🍳</div>
-    <span class="nav-logo-text">Chefly</span>
-  </a>
-  <div class="nav-links">
-    <a href="#how-it-works">How It Works</a>
-    <a href="#features">Features</a>
-    <a href="#cuisines">Cuisines</a>
-    <a href="about.html">About</a>
-    <a href="app.html" class="nav-cta">Try Chefly Free →</a>
+<!-- NAV -->
+<nav id="nav">
+  <div class="wrap nav-inner">
+    <a href="index.html" class="brand">Chef<b>ly</b><span class="dot">.</span></a>
+    <div class="nav-links" id="navlinks">
+      <a href="#how">How it works</a>
+      <a href="#features">Features</a>
+      <a href="#cuisines">Cuisines</a>
+      <a href="about.html">About</a>
+      <a href="app.html" class="nav-cta">Start cooking</a>
+    </div>
+    <button class="nav-burger" onclick="document.getElementById('navlinks').classList.toggle('open-menu')">☰</button>
   </div>
-  <button class="nav-hamburger" onclick="toggleMobileMenu()">☰</button>
 </nav>
 
-<!-- ── HERO ── -->
-<section class="hero" id="home">
-  <div class="hero-bg">
-    <div class="hero-blob hero-blob-1"></div>
-    <div class="hero-blob hero-blob-2"></div>
-    <div class="hero-blob hero-blob-3"></div>
-  </div>
-  <div class="hero-inner">
-    <div class="hero-content">
-      <div class="hero-badge">
-        <div class="dot"></div>
-        Powered by Claude AI
+<!-- HERO -->
+<header class="hero">
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <span class="kicker rise" style="animation-delay:.05s"><span class="pulse"></span> Powered by frontier AI</span>
+      <h1 class="rise" style="animation-delay:.15s">The world's<br/>pantry, <em class="swash">reimagined</em></h1>
+      <p class="hero-sub rise" style="animation-delay:.3s">Tell Chefly what's in your kitchen. In seconds, get five beautiful recipes drawn from flavours across the globe — with nutrition, shopping lists & step-by-step guides.</p>
+      <div class="hero-actions rise" style="animation-delay:.42s">
+        <a href="app.html" class="btn btn-primary">Start cooking — it's free</a>
+        <a href="#how" class="btn btn-ghost">See how it works</a>
       </div>
-      <h1 class="hero-title">
-        Turn your ingredients into <span>amazing recipes</span>
-      </h1>
-      <p class="hero-sub">
-        Chefly is your AI-powered culinary assistant. Tell us what's in your fridge and we'll suggest 5 delicious, personalised recipes you can make right now — with step-by-step guides and YouTube tutorials.
-      </p>
-      <div class="hero-actions">
-        <a href="app.html" class="btn-hero-primary">🍳 Start Cooking Free</a>
-        <a href="#how-it-works" class="btn-hero-secondary">See How It Works ↓</a>
-      </div>
-      <div class="hero-stats">
-        <div class="stat">
-          <div class="stat-num">5</div>
-          <div class="stat-label">Recipes per search</div>
-        </div>
-        <div class="stat">
-          <div class="stat-num">10+</div>
-          <div class="stat-label">Cuisine styles</div>
-        </div>
-        <div class="stat">
-          <div class="stat-num">0s</div>
-          <div class="stat-label">Sign-up time</div>
-        </div>
-      </div>
-      <div class="world-strip">
-        <div class="world-strip-label">🌍 Flavours from around the world</div>
-        <div class="world-track" id="world-track"></div>
+      <div class="hero-meta rise" style="animation-delay:.54s">
+        <div><div class="m-num">5</div><div class="m-lbl">Recipes / search</div></div>
+        <div class="sep"></div>
+        <div><div class="m-num">20+</div><div class="m-lbl">World cuisines</div></div>
+        <div class="sep"></div>
+        <div><div class="m-num">0s</div><div class="m-lbl">Sign-up needed</div></div>
       </div>
     </div>
+    <div class="hero-art rise" style="animation-delay:.3s">
+      <div class="plate"><div class="plate-emoji">🍲</div></div>
+      <div class="float-card fc-1">
+        <div class="fc-title">🍅 Tuscan Tomato Pasta</div>
+        <div class="fc-row"><span class="tag easy">Easy</span><span class="tag time">⏱ 20 min</span></div>
+        <div class="fc-bar"><i style="width:92%"></i></div>
+      </div>
+      <div class="float-card fc-2">
+        <div class="fc-title">🌿 Herb Egg Scramble</div>
+        <div class="fc-row"><span class="tag easy">Easy</span><span class="tag time">⏱ 12 min</span></div>
+        <div class="fc-bar"><i style="width:88%"></i></div>
+      </div>
+      <div class="float-card fc-3">
+        <span class="heart">❤️</span>
+        <div><b>Saved to Cookbook</b><small>12 favourites</small></div>
+      </div>
+    </div>
+  </div>
 
-    <!-- Floating phone mockup -->
-    <div class="hero-visual">
-      <div class="hero-phone">
-        <div class="phone-header">
-          <div class="phone-header-logo">👨‍🍳 Chefly</div>
-          <div class="phone-header-sub">Cook smarter with what you have</div>
-        </div>
-        <div class="phone-body">
-          <div class="phone-card">
-            <div class="phone-recipe-name">🇮🇹 Creamy Tomato Pasta</div>
-            <div class="phone-recipe-meta">
-              <span class="phone-chip easy">Easy</span>
-              <span class="phone-chip time">⏱ 20 mins</span>
-            </div>
-            <div class="phone-bar"><div class="phone-bar-fill" style="width:92%"></div></div>
-            <div style="font-size:.62rem;color:#9CA3AF;margin-top:3px">92% ingredient match</div>
-            <div class="phone-nut">
-              <div class="phone-nut-pill cal-pill">🔥 420 kcal</div>
-              <div class="phone-nut-pill pro-pill">💪 18g protein</div>
-            </div>
-          </div>
-          <div class="phone-card">
-            <div class="phone-recipe-name">🇬🇷 Greek Egg Scramble</div>
-            <div class="phone-recipe-meta">
-              <span class="phone-chip easy">Easy</span>
-              <span class="phone-chip time">⏱ 12 mins</span>
-            </div>
-            <div class="phone-bar"><div class="phone-bar-fill" style="width:88%"></div></div>
-            <div style="font-size:.62rem;color:#9CA3AF;margin-top:3px">88% ingredient match</div>
-            <div class="phone-nut">
-              <div class="phone-nut-pill cal-pill">🔥 310 kcal</div>
-              <div class="phone-nut-pill pro-pill">💪 24g protein</div>
-            </div>
-          </div>
-          <div class="phone-card" style="opacity:.6">
-            <div class="phone-recipe-name">🌍 Garlic Fried Rice</div>
-            <div class="phone-recipe-meta">
-              <span class="phone-chip time">⏱ 15 mins</span>
-            </div>
-            <div class="phone-bar"><div class="phone-bar-fill" style="width:75%"></div></div>
-            <div style="font-size:.62rem;color:#9CA3AF;margin-top:3px">75% ingredient match</div>
-          </div>
-        </div>
+  <!-- TICKER -->
+  <div class="ticker">
+    <div class="ticker-track" id="ticker"></div>
+  </div>
+</header>
+
+<!-- HOW -->
+<section id="how">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="sec-eyebrow">The ritual</span>
+      <h2 class="sec-title">From bare cupboard<br/>to <em>something wonderful</em></h2>
+      <p class="sec-lead">No meal planning. No endless scrolling. Just three small steps between you and dinner.</p>
+    </div>
+    <div class="steps reveal">
+      <div class="step">
+        <div class="step-ico">🧺</div>
+        <div class="step-n">01</div>
+        <h3>Empty the basket</h3>
+        <p>List whatever you have — two ingredients or ten. Chefly works with what's real, not a perfect shopping trip.</p>
       </div>
-      <div class="hero-float-card hero-float-card-1">
-        <div class="float-icon">🛒</div>
-        <div class="float-text">
-          <strong>Shopping List</strong>
-          <span>3 items needed</span>
-        </div>
+      <div class="step">
+        <div class="step-ico">🌍</div>
+        <div class="step-n">02</div>
+        <h3>Pick a mood</h3>
+        <p>Italian comfort, Thai heat, a healthy reset, or “surprise me.” Set the direction and let the AI cook.</p>
       </div>
-      <div class="hero-float-card hero-float-card-2">
-        <div class="float-icon">❤️</div>
-        <div class="float-text">
-          <strong>Saved to Cookbook</strong>
-          <span>12 favourites</span>
-        </div>
+      <div class="step">
+        <div class="step-ico">📖</div>
+        <div class="step-n">03</div>
+        <h3>Cook with guidance</h3>
+        <p>Five tailored recipes with nutrition, a shopping list for what's missing, and tick-off steps to the finish.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ── HOW IT WORKS ── -->
-<section class="how-it-works" id="how-it-works">
-  <div class="section-inner">
-    <span class="section-label">How It Works</span>
-    <h2 class="section-title">From fridge to <span>fork</span> in 4 steps</h2>
-    <p class="section-sub">No account needed. No subscription. Just type your ingredients and let our AI do the cooking planning.</p>
-
-    <div class="steps-grid">
-      <div class="step-block">
-        <div class="step-number">1</div>
-        <span class="step-emoji">🥦</span>
-        <div class="step-title">Add your ingredients</div>
-        <div class="step-desc">Type in whatever you have at home — eggs, tomatoes, pasta, cheese. Up to 10 ingredients.</div>
+<!-- FEATURES -->
+<section id="features">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="sec-eyebrow">Everything inside</span>
+      <h2 class="sec-title">A kitchen companion<br/>that <em>actually helps</em></h2>
+    </div>
+    <div class="bento">
+      <div class="cell wide reveal">
+        <div class="cell-ico">💬</div>
+        <h3>Chat with your own chef</h3>
+        <p>Ask anything — substitutions, techniques, “what goes with miso?” — in a conversation that remembers what you asked a moment ago.</p>
       </div>
-      <div class="step-block">
-        <div class="step-number">2</div>
-        <span class="step-emoji">🌍</span>
-        <div class="step-title">Pick a cuisine</div>
-        <div class="step-desc">Choose Italian, Japanese, Mexican, Indian, American — or let Chefly surprise you.</div>
+      <div class="cell reveal">
+        <div class="cell-ico">🥗</div>
+        <h3>Healthy mode</h3>
+        <p>Lean, high-protein recipes with calories and macros on every card.</p>
       </div>
-      <div class="step-block">
-        <div class="step-number">3</div>
-        <span class="step-emoji">✨</span>
-        <div class="step-title">Get AI recipes</div>
-        <div class="step-desc">Claude AI generates 5 personalised recipes with calories, protein, and ingredient match scores.</div>
+      <div class="cell reveal">
+        <div class="cell-ico">🛒</div>
+        <h3>Smart shopping lists</h3>
+        <p>Chefly knows what you have and lists only what you're missing.</p>
       </div>
-      <div class="step-block">
-        <div class="step-number">4</div>
-        <span class="step-emoji">👨‍🍳</span>
-        <div class="step-title">Cook & enjoy</div>
-        <div class="step-desc">Follow the step-by-step guide, watch a YouTube tutorial, and tick off steps as you cook.</div>
+      <div class="cell dark reveal">
+        <div class="cell-ico">🥫</div>
+        <h3>Your pantry, remembered</h3>
+        <p>Save the staples and marinades you always keep, and start every search a step ahead.</p>
+      </div>
+      <div class="cell reveal">
+        <div class="cell-ico">📖</div>
+        <h3>A cloud cookbook</h3>
+        <p>Heart a recipe and it follows you to any device, anytime.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ── FEATURES ── -->
-<section class="features" id="features">
-  <div class="section-inner">
-    <span class="section-label">Features</span>
-    <h2 class="section-title">Everything a home cook <span>needs</span></h2>
-    <p class="section-sub">Chefly isn't just a recipe finder — it's your complete kitchen companion.</p>
-
-    <div class="features-grid">
-      <div class="feature-card">
-        <div class="feature-icon">🤖</div>
-        <div class="feature-title">Claude AI Powered</div>
-        <div class="feature-desc">Backed by Anthropic's Claude — one of the world's most capable AI models — for creative, realistic recipe suggestions every time.</div>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">🔥</div>
-        <div class="feature-title">Nutrition Tracking</div>
-        <div class="feature-desc">Every recipe shows estimated calories and protein per serving. Scale up or down with our serving size adjuster.</div>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">🥗</div>
-        <div class="feature-title">Healthy Mode</div>
-        <div class="feature-desc">Toggle Healthy Mode to get low-calorie, high-protein recipes. Perfect for fitness goals without sacrificing flavour.</div>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">🛒</div>
-        <div class="feature-title">Smart Shopping List</div>
-        <div class="feature-desc">See exactly which ingredients you have and which you need. Copy the missing items to your clipboard in one tap.</div>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">📖</div>
-        <div class="feature-title">My Cookbook</div>
-        <div class="feature-desc">Save your favourite recipes to your personal Cookbook. They persist between sessions so you can come back anytime.</div>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">🎬</div>
-        <div class="feature-title">YouTube Integration</div>
-        <div class="feature-desc">Every recipe links to a tailored YouTube cooking tutorial so you can watch a professional chef make the exact dish.</div>
+<!-- CUISINES -->
+<section id="cuisines">
+  <div class="wrap">
+    <div class="quote-sec reveal">
+      <blockquote>Every cuisine on earth, translated through <em>what's in your fridge tonight</em>.</blockquote>
+      <div class="quote-by">
+        <div class="quote-av">👨‍🍳</div>
+        <div><b>The Chefly philosophy</b><span>Less waste, more wonder</span></div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ── CUISINES ── -->
-<section class="cuisines" id="cuisines">
-  <div class="section-inner" style="text-align:center">
-    <span class="section-label">Cuisines</span>
-    <h2 class="section-title">Cook food from <span>around the world</span></h2>
-    <p class="section-sub" style="margin:0 auto">From a quick Italian pasta to an authentic Indian curry — choose your flavour or let Chefly surprise you.</p>
-
-    <div class="cuisines-row">
-      <div class="cuisine-pill"><span class="flag">🇮🇹</span><span class="name">Italian</span></div>
-      <div class="cuisine-pill"><span class="flag">🇯🇵</span><span class="name">Japanese</span></div>
-      <div class="cuisine-pill"><span class="flag">🇲🇽</span><span class="name">Mexican</span></div>
-      <div class="cuisine-pill"><span class="flag">🇮🇳</span><span class="name">Indian</span></div>
-      <div class="cuisine-pill"><span class="flag">🇺🇸</span><span class="name">American</span></div>
-      <div class="cuisine-pill"><span class="flag">🇹🇭</span><span class="name">Thai</span></div>
-      <div class="cuisine-pill"><span class="flag">🇬🇷</span><span class="name">Greek</span></div>
-      <div class="cuisine-pill"><span class="flag">🇫🇷</span><span class="name">French</span></div>
-      <div class="cuisine-pill"><span class="flag">🇰🇷</span><span class="name">Korean</span></div>
-      <div class="cuisine-pill"><span class="flag">🇪🇸</span><span class="name">Spanish</span></div>
-      <div class="cuisine-pill"><span class="flag">🎲</span><span class="name">Surprise Me!</span></div>
-    </div>
+<!-- CTA -->
+<section class="cta">
+  <div class="wrap reveal">
+    <h2>Tonight's dinner is<br/>already <em>in your kitchen</em>.</h2>
+    <p>Free to use, no account required. Let Chefly find it for you.</p>
+    <a href="app.html" class="btn btn-primary">Start cooking with Chefly</a>
   </div>
 </section>
 
-<!-- ── TESTIMONIALS ── -->
-<section class="testimonials">
-  <div class="section-inner">
-    <span class="section-label">Loved By Home Cooks</span>
-    <h2 class="section-title">What people are <span>saying</span></h2>
-
-    <div class="testi-grid">
-      <div class="testi-card">
-        <div class="testi-stars">★★★★★</div>
-        <p class="testi-text">"I had eggs, spinach, and feta cheese and had no idea what to make. Chefly suggested a Greek-style frittata in seconds. Absolutely delicious and dead easy."</p>
-        <div class="testi-author">
-          <div class="testi-avatar">👩</div>
-          <div>
-            <div class="testi-name">Sarah M.</div>
-            <div class="testi-role">Home cook, Melbourne</div>
-          </div>
-        </div>
-      </div>
-      <div class="testi-card">
-        <div class="testi-stars">★★★★★</div>
-        <p class="testi-text">"The Healthy Mode is a game changer. I'm trying to hit my protein macros and Chefly gives me high-protein recipes using whatever I have in the fridge."</p>
-        <div class="testi-author">
-          <div class="testi-avatar">🧑</div>
-          <div>
-            <div class="testi-name">James K.</div>
-            <div class="testi-role">Fitness enthusiast, Sydney</div>
-          </div>
-        </div>
-      </div>
-      <div class="testi-card">
-        <div class="testi-stars">★★★★★</div>
-        <p class="testi-text">"The shopping list feature alone is worth it. I can see exactly what I need to buy for each recipe, so there's zero food waste. Love this app."</p>
-        <div class="testi-author">
-          <div class="testi-avatar">👩‍🦱</div>
-          <div>
-            <div class="testi-name">Priya R.</div>
-            <div class="testi-role">Busy mum, Auckland</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ── CTA BAND ── -->
-<div class="cta-band">
-  <h2>Ready to cook something amazing?</h2>
-  <p>Join thousands of home cooks who use Chefly every day to turn their ingredients into extraordinary meals.</p>
-  <a href="app.html" class="btn-cta-white">🍳 Try Chefly Free — No Sign Up</a>
-</div>
-
-<!-- ── FOOTER ── -->
+<!-- FOOTER -->
 <footer>
-  <div class="footer-inner">
-    <div class="footer-top">
-      <div>
-        <div class="footer-brand-logo">
-          <div class="footer-brand-icon">👨‍🍳</div>
-          <span class="footer-brand-name">Chefly</span>
-        </div>
-        <p class="footer-brand-desc">Your AI-powered recipe assistant. Cook smarter with what you have.</p>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a href="index.html" class="brand">Chef<b>ly</b><span class="dot">.</span></a>
+        <p>Your AI culinary companion. Turning real ingredients into recipes worth cooking — from every corner of the world.</p>
       </div>
-      <div class="footer-col">
+      <div class="foot-col">
         <h4>Product</h4>
-        <ul>
-          <li><a href="app.html">Recipe Finder</a></li>
-          <li><a href="#features">Features</a></li>
-          <li><a href="#cuisines">Cuisines</a></li>
-          <li><a href="#how-it-works">How It Works</a></li>
-        </ul>
+        <a href="app.html">Recipe finder</a>
+        <a href="#features">Features</a>
+        <a href="#cuisines">Cuisines</a>
+        <a href="#how">How it works</a>
       </div>
-      <div class="footer-col">
+      <div class="foot-col">
         <h4>Company</h4>
-        <ul>
-          <li><a href="about.html">About</a></li>
-          <li><a href="about.html#contact">Contact</a></li>
-        </ul>
+        <a href="about.html">About</a>
+        <a href="about.html#contact">Contact</a>
       </div>
-      <div class="footer-col">
-        <h4>Technology</h4>
-        <ul>
-          <li><a href="https://anthropic.com" target="_blank" rel="noopener">Anthropic Claude</a></li>
-          <li><a href="https://console.anthropic.com" target="_blank" rel="noopener">Get API Key</a></li>
-        </ul>
+      <div class="foot-col">
+        <h4>Built with</h4>
+        <a href="https://openrouter.ai" target="_blank" rel="noopener">OpenRouter AI</a>
+        <a href="https://supabase.com" target="_blank" rel="noopener">Supabase</a>
+        <a href="https://vercel.com" target="_blank" rel="noopener">Vercel</a>
       </div>
     </div>
-    <div class="footer-bottom">
-      <p class="footer-copy">© 2026 Chefly. All rights reserved.</p>
-      <p class="footer-badge">Built with <span>♥</span> and powered by Claude AI</p>
+    <div class="foot-bottom">
+      <span>© 2026 Chefly · aichefly.com</span>
+      <span>Made with care &amp; a little hunger.</span>
     </div>
   </div>
 </footer>
 
 <script>
-  // Sticky nav shadow
-  window.addEventListener('scroll', () => {
-    document.getElementById('main-nav').classList.toggle('scrolled', window.scrollY > 20);
-  });
+  // sticky nav
+  const nav = document.getElementById('nav');
+  const onScroll = () => nav.classList.toggle('scrolled', window.scrollY > 24);
+  onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
 
-  function toggleMobileMenu() {
-    const links = document.querySelector('.nav-links');
-    if (links.style.display === 'flex') {
-      links.style.display = 'none';
-    } else {
-      links.style.cssText = 'display:flex;flex-direction:column;position:fixed;top:68px;left:0;right:0;background:white;padding:20px 24px 28px;gap:16px;box-shadow:0 8px 32px rgba(0,0,0,.1);z-index:99;';
-    }
-  }
+  // mobile menu
+  const style = document.createElement('style');
+  style.textContent = '.nav-links.open-menu{display:flex;flex-direction:column;position:fixed;top:72px;left:0;right:0;background:var(--paper);padding:24px 28px 30px;gap:18px;border-bottom:1px solid var(--line);box-shadow:0 20px 40px -20px rgba(0,0,0,.3);z-index:99}';
+  document.head.appendChild(style);
 
-  // World cuisine showcase marquee
-  const WORLD_CUISINES = [
+  // world cuisines ticker
+  const CUISINES = [
     ['it','Italian'],['jp','Japanese'],['mx','Mexican'],['in','Indian'],['th','Thai'],
     ['fr','French'],['cn','Chinese'],['gr','Greek'],['kr','Korean'],['es','Spanish'],
     ['vn','Vietnamese'],['lb','Lebanese'],['tr','Turkish'],['ma','Moroccan'],['br','Brazilian'],
     ['et','Ethiopian'],['pe','Peruvian'],['id','Indonesian'],['us','American'],['ir','Persian'],
   ];
-  (function () {
-    const track = document.getElementById('world-track');
-    if (!track) return;
-    const pill = ([code, name]) => `<span class="world-pill"><img class="flag" src="https://flagcdn.com/w40/${code}.png" alt="" loading="lazy" />${name}</span>`;
-    track.innerHTML = WORLD_CUISINES.map(pill).join('') + WORLD_CUISINES.map(pill).join('');
-  })();
+  const pill = ([c,n]) => `<span class="cuisine-pill"><img src="https://flagcdn.com/w40/${c}.png" alt="" loading="lazy"/>${n}<span class="star">✦</span></span>`;
+  document.getElementById('ticker').innerHTML = CUISINES.map(pill).join('') + CUISINES.map(pill).join('');
+
+  // scroll reveal
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 </script>
 </body>
 </html>
