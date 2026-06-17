@@ -15,15 +15,23 @@ export default async function handler(req, res) {
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
-    const { system, message, max_tokens } = body;
-    if (!message) {
+    const { system, message, history, max_tokens } = body;
+    if (!message && !(Array.isArray(history) && history.length)) {
       res.status(400).json({ error: 'Missing message' });
       return;
     }
 
     const messages = [];
     if (system) messages.push({ role: 'system', content: system });
-    messages.push({ role: 'user', content: message });
+    // Optional prior turns for chat with memory
+    if (Array.isArray(history)) {
+      for (const h of history) {
+        if (h && (h.role === 'user' || h.role === 'assistant') && typeof h.content === 'string') {
+          messages.push({ role: h.role, content: h.content });
+        }
+      }
+    }
+    if (message) messages.push({ role: 'user', content: message });
 
     const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
