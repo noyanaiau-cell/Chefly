@@ -1,16 +1,17 @@
-// Vercel serverless function — proxies recipe requests to the Anthropic API
-// using the server-side ANTHROPIC_API_KEY, so visitors never need their own key.
+// Vercel serverless function — proxies recipe requests to an LLM via OpenRouter
+// using the server-side OPENROUTER_API_KEY, so visitors never need their own key.
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' });
     return;
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.OPENROUTER_API_KEY || process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     res.status(500).json({ error: 'Recipe service is not configured yet.' });
     return;
   }
+  const model = process.env.LLM_MODEL || 'anthropic/claude-3.5-sonnet';
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
@@ -20,28 +21,33 @@ export default async function handler(req, res) {
       return;
     }
 
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
+    const messages = [];
+    if (system) messages.push({ role: 'system', content: system });
+    messages.push({ role: 'user', content: message });
+
+    const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'content-type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://www.aichefly.com',
+        'X-Title': 'Chefly',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model,
         max_tokens: max_tokens || 2048,
-        system: system || '',
-        messages: [{ role: 'user', content: message }],
+        messages,
       }),
     });
 
     const data = await r.json();
     if (!r.ok) {
-      const msg = data?.error?.message || `Anthropic error ${r.status}`;
+      const msg = data?.error?.message || `LLM error ${r.status}`;
       res.status(r.status).json({ error: msg });
       return;
     }
-    res.status(200).json({ text: data?.content?.[0]?.text || '' });
+    const text = data?.choices?.[0]?.message?.content || '';
+    res.status(200).json({ text });
   } catch (e) {
     res.status(500).json({ error: e.message || 'Unexpected server error' });
   }
