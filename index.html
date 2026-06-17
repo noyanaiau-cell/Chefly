@@ -434,7 +434,10 @@
     ['vn','Vietnamese'],['lb','Lebanese'],['tr','Turkish'],['ma','Moroccan'],['br','Brazilian'],
     ['et','Ethiopian'],['pe','Peruvian'],['id','Indonesian'],['us','American'],['ir','Persian'],
   ];
-  const pill = ([c,n]) => `<span class="cuisine-pill"><img src="https://flagcdn.com/w40/${c}.png" alt="" loading="lazy"/>${n}<span class="star">✦</span></span>`;
+  // Persian uses the historical Lion & Sun (Shir-o-Khorshid) flag, not flagcdn's current flag
+  const IRAN_LION_SUN = 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/State_flag_of_Iran_%281964%E2%80%931980%29.svg/80px-State_flag_of_Iran_%281964%E2%80%931980%29.svg.png';
+  const flagSrc = c => c === 'ir' ? IRAN_LION_SUN : `https://flagcdn.com/w40/${c}.png`;
+  const pill = ([c,n]) => `<span class="cuisine-pill"><img src="${flagSrc(c)}" alt="" loading="lazy"/>${n}<span class="star">✦</span></span>`;
   document.getElementById('ticker').innerHTML = CUISINES.map(pill).join('') + CUISINES.map(pill).join('');
 
   // scroll reveal

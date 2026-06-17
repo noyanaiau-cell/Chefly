@@ -752,7 +752,10 @@ const WORLD_CUISINES = [
 (function renderWorldStrip() {
   const track = document.getElementById('world-track');
   if (!track) return;
-  const pill = ([code, name]) => `<span class="world-pill"><img class="flag" src="https://flagcdn.com/w40/${code}.png" alt="" loading="lazy" />${name}</span>`;
+  // Persian uses the historical Lion & Sun (Shir-o-Khorshid) flag, not flagcdn's current flag
+  const IRAN_LION_SUN = 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/State_flag_of_Iran_%281964%E2%80%931980%29.svg/80px-State_flag_of_Iran_%281964%E2%80%931980%29.svg.png';
+  const flagSrc = (code) => code === 'ir' ? IRAN_LION_SUN : `https://flagcdn.com/w40/${code}.png`;
+  const pill = ([code, name]) => `<span class="world-pill"><img class="flag" src="${flagSrc(code)}" alt="" loading="lazy" />${name}</span>`;
   // duplicate the list so the marquee loops seamlessly
   track.innerHTML = WORLD_CUISINES.map(pill).join('') + WORLD_CUISINES.map(pill).join('');
 })();
