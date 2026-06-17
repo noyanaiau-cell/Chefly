@@ -276,6 +276,22 @@
     .fab { width: 44px; height: 44px; border-radius: 50%; border: none; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; transition: transform .2s; }
     .fab:hover { transform: scale(1.1); }
     .fab-key  { background: var(--orange); color: white; box-shadow: 0 4px 16px rgba(232,101,10,.4); }
+    .fab-pantry { background: var(--white); color: var(--charcoal); box-shadow: 0 4px 16px rgba(0,0,0,.12); }
+
+    /* Pantry */
+    .pantry-add { display: flex; gap: 8px; margin-bottom: 20px; }
+    .pantry-add input { flex: 1; border: 2px solid #E5E7EB; border-radius: 10px; padding: 11px 14px; font-family: 'Inter', sans-serif; font-size: .92rem; outline: none; color: var(--charcoal); transition: border-color var(--transition); }
+    .pantry-add input:focus { border-color: var(--orange); }
+    .pantry-add select { border: 2px solid #E5E7EB; border-radius: 10px; padding: 0 10px; font-family: 'Inter', sans-serif; font-size: .9rem; background: var(--white); cursor: pointer; color: var(--charcoal); }
+    .pantry-group { margin-bottom: 16px; }
+    .pantry-group-title { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--gray); margin-bottom: 8px; }
+    .pantry-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .pantry-chip { display: flex; align-items: center; gap: 6px; background: var(--orange-pale); color: var(--orange); border: 1.5px solid rgba(232,101,10,.25); border-radius: 999px; padding: 6px 8px 6px 14px; font-size: .85rem; font-weight: 500; cursor: pointer; transition: all .2s; }
+    .pantry-chip:hover { background: var(--orange); color: white; }
+    .pantry-chip:hover .pantry-chip-x { color: white; }
+    .pantry-chip-x { background: none; border: none; cursor: pointer; color: var(--orange); font-size: .95rem; line-height: 1; padding: 0 2px; opacity: .7; }
+    .pantry-chip-x:hover { opacity: 1; }
+    .pantry-empty { font-size: .85rem; color: var(--gray); text-align: center; padding: 24px 0; }
     .fab-book { background: var(--white); color: var(--charcoal); box-shadow: 0 4px 16px rgba(0,0,0,.12); position: relative; }
     .fab-badge { position: absolute; top: -4px; right: -4px; background: var(--orange); color: white; border-radius: 50%; width: 18px; height: 18px; font-size: .65rem; font-weight: 700; display: flex; align-items: center; justify-content: center; }
     .fab-badge.hidden { display: none; }
@@ -329,8 +345,30 @@
   </div>
 </div>
 
+<!-- Pantry Modal -->
+<div class="modal-overlay hidden" id="pantry-modal">
+  <div class="modal" style="max-width:520px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <h2 style="margin:0">🥫 My Pantry</h2>
+      <button class="back-btn" style="margin:0" onclick="closePantry()">✕ Close</button>
+    </div>
+    <p style="margin-bottom:16px">Save the foods, ingredients & marinades you keep on hand. Tap any item to add it to your recipe search.</p>
+    <div class="pantry-add">
+      <input type="text" id="pantry-input" placeholder="e.g. olive oil, soy marinade..." maxlength="40" onkeydown="if(event.key==='Enter'){event.preventDefault();submitPantryItem();}" />
+      <select id="pantry-type">
+        <option value="food">🍎 Food</option>
+        <option value="ingredient">🧂 Ingredient</option>
+        <option value="marinade">🫙 Marinade</option>
+      </select>
+      <button class="btn btn-primary" style="padding:11px 18px" onclick="submitPantryItem()">Add</button>
+    </div>
+    <div id="pantry-groups"></div>
+  </div>
+</div>
+
 <!-- Floating buttons -->
 <div class="fab-row">
+  <button class="fab fab-pantry" title="My Pantry" onclick="openPantry()">🥫</button>
   <button class="fab fab-book" title="My Cookbook" onclick="openCookbook()">
     📖<span class="fab-badge hidden" id="cookbook-badge">0</span>
   </button>
@@ -556,6 +594,38 @@ async function cloudRemoveFavourite(name) {
   catch (e) { console.warn('Cloud remove failed', e); }
 }
 
+// ── Pantry (saved foods / ingredients / marinades) ──
+let pantry = JSON.parse(localStorage.getItem('chefly_pantry') || '[]');
+async function cloudLoadPantry() {
+  if (!sb) { renderPantry(); return; }
+  try {
+    const { data, error } = await sb.from('pantry')
+      .select('id, item_type, name, created_at')
+      .eq('session_id', cheflySession)
+      .order('created_at', { ascending: true });
+    if (error) throw error;
+    if (data) { pantry = data; localStorage.setItem('chefly_pantry', JSON.stringify(pantry)); }
+  } catch (e) { console.warn('Pantry load failed, using local copy', e); }
+  renderPantry();
+}
+async function addPantryItem(name, type) {
+  name = name.trim().toLowerCase().replace(/\s+/g, ' ');
+  if (!name) return;
+  if (pantry.some(p => p.name === name && p.item_type === type)) { showToast('Already in your pantry'); return; }
+  const item = { id: (crypto.randomUUID ? crypto.randomUUID() : 'p-' + Date.now()), item_type: type, name, created_at: new Date().toISOString() };
+  pantry.push(item);
+  localStorage.setItem('chefly_pantry', JSON.stringify(pantry));
+  renderPantry();
+  showToast('🥫 Added to pantry');
+  if (sb) { try { await sb.from('pantry').insert({ session_id: cheflySession, item_type: type, name }); } catch (e) { console.warn('Pantry save failed', e); } }
+}
+async function removePantryItem(id) {
+  pantry = pantry.filter(p => p.id !== id);
+  localStorage.setItem('chefly_pantry', JSON.stringify(pantry));
+  renderPantry();
+  if (sb) { try { await sb.from('pantry').delete().eq('id', id); } catch (e) { console.warn('Pantry remove failed', e); } }
+}
+
 const state = {
   apiKey: localStorage.getItem('chefly_key') || '',
   ingredients: [], cuisine: 'Any', healthyMode: false,
@@ -571,6 +641,43 @@ const surpriseCuisines = ['Italian','Japanese','Mexican','Indian','American','Th
 if (state.apiKey) document.getElementById('api-modal').classList.add('hidden');
 updateCookbookBadge();
 cloudLoadFavourites();
+cloudLoadPantry();
+
+// Pantry UI
+const PANTRY_GROUPS = [
+  { type: 'food',       label: '🍎 Foods' },
+  { type: 'ingredient', label: '🧂 Ingredients' },
+  { type: 'marinade',   label: '🫙 Marinades' },
+];
+function openPantry()  { renderPantry(); document.getElementById('pantry-modal').classList.remove('hidden'); }
+function closePantry() { document.getElementById('pantry-modal').classList.add('hidden'); }
+function submitPantryItem() {
+  const input = document.getElementById('pantry-input');
+  const type  = document.getElementById('pantry-type').value;
+  addPantryItem(input.value, type);
+  input.value = ''; input.focus();
+}
+function renderPantry() {
+  const wrap = document.getElementById('pantry-groups');
+  if (!wrap) return;
+  if (!pantry.length) { wrap.innerHTML = `<div class="pantry-empty">Your pantry is empty. Add your go-to foods and marinades above.</div>`; return; }
+  wrap.innerHTML = PANTRY_GROUPS.map(g => {
+    const items = pantry.filter(p => p.item_type === g.type);
+    if (!items.length) return '';
+    const chips = items.map(p => `
+      <span class="pantry-chip" onclick="usePantryItem('${p.name.replace(/'/g,"\\'")}')">
+        ${cap(p.name)}
+        <button class="pantry-chip-x" onclick="event.stopPropagation();removePantryItem('${p.id}')">✕</button>
+      </span>`).join('');
+    return `<div class="pantry-group"><div class="pantry-group-title">${g.label}</div><div class="pantry-chips">${chips}</div></div>`;
+  }).join('');
+}
+function usePantryItem(name) {
+  goToScreen(1);
+  addIngredient(name);
+  closePantry();
+  showToast('Added to your recipe search');
+}
 document.getElementById('cookbook-back-btn').onclick = () => goToScreen(state.cookbookFrom);
 
 function saveApiKey() {

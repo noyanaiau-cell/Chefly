@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Chefly — Admin Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --orange: #E8650A; --orange-light: #FF8533; --orange-pale: #FFF0E0;
+      --cream: #FFF8F0; --charcoal: #1A1A1A; --gray: #6B7280; --gray-light: #F3F4F6;
+      --white: #FFFFFF; --green: #22C55E; --red: #EF4444;
+      --radius: 16px; --shadow: 0 4px 24px rgba(232,101,10,.10);
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--cream); color: var(--charcoal); min-height: 100vh; }
+    nav {
+      position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,.94); backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(232,101,10,.1); padding: 0 32px; height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-logo { display: flex; align-items: center; gap: 9px; text-decoration: none; }
+    .nav-logo-icon { width: 34px; height: 34px; background: var(--orange); border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .nav-logo-text { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-weight: 700; color: var(--orange); }
+    .nav-right { display: flex; align-items: center; gap: 16px; }
+    .nav-link { font-size: .85rem; font-weight: 500; color: var(--gray); text-decoration: none; }
+    .nav-link:hover { color: var(--orange); }
+    .logout-btn { font-size: .82rem; font-weight: 600; color: var(--red); background: none; border: none; cursor: pointer; }
+
+    .wrap { max-width: 1000px; margin: 0 auto; padding: 36px 24px 80px; }
+    h1 { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; margin-bottom: 6px; }
+    .sub { color: var(--gray); font-size: .92rem; margin-bottom: 28px; }
+
+    /* Key gate */
+    .gate { max-width: 480px; margin: 80px auto; background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 36px 32px; }
+    .gate h2 { font-family: 'Playfair Display', serif; font-size: 1.5rem; margin-bottom: 8px; }
+    .gate p { font-size: .88rem; color: var(--gray); line-height: 1.6; margin-bottom: 18px; }
+    .gate input { width: 100%; border: 2px solid #E5E7EB; border-radius: 10px; padding: 12px 14px; font-family: 'Inter', sans-serif; font-size: .92rem; outline: none; margin-bottom: 14px; color: var(--charcoal); }
+    .gate input:focus { border-color: var(--orange); }
+    .gate .note { font-size: .76rem; background: #FFF7ED; border: 1.5px solid #FED7AA; border-radius: 10px; padding: 10px 12px; color: #9A3412; margin-bottom: 16px; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 24px; border-radius: 999px; font-family: 'Inter', sans-serif; font-size: .92rem; font-weight: 600; cursor: pointer; border: none; transition: all .25s; }
+    .btn-primary { background: var(--orange); color: var(--white); box-shadow: 0 4px 16px rgba(232,101,10,.35); width: 100%; }
+    .btn-primary:hover { background: var(--orange-light); }
+
+    /* Stats */
+    .stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 32px; }
+    .stat-card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px 22px; }
+    .stat-num { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; color: var(--orange); }
+    .stat-lbl { font-size: .82rem; color: var(--gray); margin-top: 2px; }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+    .tab { padding: 9px 18px; border-radius: 999px; border: 2px solid #E5E7EB; background: var(--white); font-size: .85rem; font-weight: 600; cursor: pointer; transition: all .2s; color: var(--gray); }
+    .tab.active { border-color: var(--orange); background: var(--orange-pale); color: var(--orange); }
+
+    .panel { display: none; }
+    .panel.active { display: block; animation: fade .3s ease; }
+    @keyframes fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Message cards */
+    .msg-card { background: var(--white); border-radius: 14px; box-shadow: var(--shadow); padding: 18px 20px; margin-bottom: 14px; }
+    .msg-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
+    .msg-name { font-weight: 600; font-size: .98rem; }
+    .msg-email { font-size: .82rem; color: var(--orange); text-decoration: none; }
+    .msg-email:hover { text-decoration: underline; }
+    .msg-date { font-size: .76rem; color: var(--gray); }
+    .msg-subject { display: inline-block; font-size: .72rem; font-weight: 600; background: var(--orange-pale); color: var(--orange); padding: 3px 10px; border-radius: 999px; margin-bottom: 10px; }
+    .msg-body { font-size: .9rem; line-height: 1.6; color: #374151; white-space: pre-wrap; }
+    .reply-btn { font-size: .8rem; font-weight: 600; color: var(--orange); text-decoration: none; margin-top: 10px; display: inline-block; }
+
+    /* Recipe cards */
+    .rec-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(280px,1fr)); gap: 14px; }
+    .rec-card { background: var(--white); border-radius: 14px; box-shadow: var(--shadow); padding: 16px 18px; }
+    .rec-name { font-family: 'Playfair Display', serif; font-size: 1.05rem; font-weight: 600; margin-bottom: 6px; }
+    .rec-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+    .rec-meta span { font-size: .74rem; color: var(--gray); background: var(--gray-light); padding: 2px 8px; border-radius: 999px; }
+    .rec-desc { font-size: .84rem; color: var(--gray); line-height: 1.5; }
+
+    .empty { text-align: center; padding: 60px 20px; color: var(--gray); }
+    .empty .ico { font-size: 3rem; margin-bottom: 10px; }
+    .loading { text-align: center; padding: 60px; color: var(--gray); }
+    .error { background: #FEF2F2; border: 1.5px solid #FCA5A5; color: var(--red); border-radius: 12px; padding: 16px; font-size: .88rem; margin-bottom: 16px; }
+    .hidden { display: none !important; }
+    @media (max-width: 600px) { .stats { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">
+    <div class="nav-logo-icon">👨‍🍳</div>
+    <span class="nav-logo-text">Chefly</span>
+  </a>
+  <div class="nav-right">
+    <span class="nav-link">Admin</span>
+    <button class="logout-btn hidden" id="logout-btn" onclick="logout()">Log out</button>
+  </div>
+</nav>
+
+<!-- Key gate -->
+<div class="gate" id="gate">
+  <h2>🔒 Admin Access</h2>
+  <p>This dashboard reads private data (saved recipes and contact messages). Paste your Supabase <strong>service-role key</strong> to continue.</p>
+  <div class="note">⚠️ Your key is stored only in this browser (localStorage) and never sent anywhere except Supabase. Don't use this on a shared computer.</div>
+  <input type="password" id="key-input" placeholder="service_role key (eyJ... or sb_secret_...)" />
+  <button class="btn btn-primary" onclick="unlock()">Unlock Dashboard →</button>
+  <p style="font-size:.76rem;color:var(--gray);margin-top:14px;text-align:center">Find it in Supabase → Project Settings → API Keys → service_role / secret key</p>
+</div>
+
+<!-- Dashboard -->
+<div class="wrap hidden" id="dash">
+  <h1>📊 Chefly Dashboard</h1>
+  <p class="sub">Your saved recipes, pantry items, and messages from visitors.</p>
+
+  <div id="error-box"></div>
+
+  <div class="stats">
+    <div class="stat-card"><div class="stat-num" id="stat-recipes">—</div><div class="stat-lbl">Saved recipes</div></div>
+    <div class="stat-card"><div class="stat-num" id="stat-pantry">—</div><div class="stat-lbl">Pantry items</div></div>
+    <div class="stat-card"><div class="stat-num" id="stat-messages">—</div><div class="stat-lbl">Contact messages</div></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-panel="messages" onclick="switchTab(this)">✉️ Messages</button>
+    <button class="tab" data-panel="recipes" onclick="switchTab(this)">🍳 Saved Recipes</button>
+    <button class="tab" data-panel="pantry" onclick="switchTab(this)">🥫 Pantry</button>
+  </div>
+
+  <div class="panel active" id="panel-messages"><div class="loading">Loading messages…</div></div>
+  <div class="panel" id="panel-recipes"><div class="loading">Loading recipes…</div></div>
+  <div class="panel" id="panel-pantry"><div class="loading">Loading pantry…</div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = 'https://ffasbkljsvjebsqvhhuz.supabase.co';
+  let sb = null;
+
+  function unlock() {
+    const key = document.getElementById('key-input').value.trim();
+    if (!key) { alert('Please paste your service-role key.'); return; }
+    localStorage.setItem('chefly_admin_key', key);
+    start(key);
+  }
+  function logout() {
+    localStorage.removeItem('chefly_admin_key');
+    location.reload();
+  }
+  function switchTab(btn) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.panel).classList.add('active');
+  }
+  function fmtDate(d) {
+    try { return new Date(d).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }); }
+    catch { return d; }
+  }
+  function esc(s) { const d = document.createElement('div'); d.textContent = s ?? ''; return d.innerHTML; }
+
+  async function start(key) {
+    try { sb = window.supabase.createClient(SUPABASE_URL, key); }
+    catch (e) { alert('Could not initialise. Check your key.'); return; }
+    document.getElementById('gate').classList.add('hidden');
+    document.getElementById('dash').classList.remove('hidden');
+    document.getElementById('logout-btn').classList.remove('hidden');
+    loadMessages(); loadRecipes(); loadPantry();
+  }
+
+  function showError(msg) {
+    document.getElementById('error-box').innerHTML = `<div class="error">${esc(msg)} — your key may be invalid. <button class="logout-btn" onclick="logout()">Re-enter key</button></div>`;
+  }
+
+  async function loadMessages() {
+    const panel = document.getElementById('panel-messages');
+    try {
+      const { data, error } = await sb.from('contact_messages').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      document.getElementById('stat-messages').textContent = data.length;
+      if (!data.length) { panel.innerHTML = `<div class="empty"><div class="ico">📭</div><p>No messages yet.</p></div>`; return; }
+      panel.innerHTML = data.map(m => `
+        <div class="msg-card">
+          <div class="msg-top">
+            <div>
+              <span class="msg-name">${esc(m.name)}</span> ·
+              <a class="msg-email" href="mailto:${esc(m.email)}">${esc(m.email)}</a>
+            </div>
+            <span class="msg-date">${fmtDate(m.created_at)}</span>
+          </div>
+          ${m.subject ? `<span class="msg-subject">${esc(m.subject)}</span>` : ''}
+          <div class="msg-body">${esc(m.message)}</div>
+          <a class="reply-btn" href="mailto:${esc(m.email)}?subject=Re: ${encodeURIComponent(m.subject || 'Your message to Chefly')}">↩ Reply</a>
+        </div>`).join('');
+    } catch (e) { panel.innerHTML = `<div class="empty"><p>Couldn't load messages.</p></div>`; showError(e.message || 'Access denied'); }
+  }
+
+  async function loadRecipes() {
+    const panel = document.getElementById('panel-recipes');
+    try {
+      const { data, error } = await sb.from('cookbook').select('recipe_data, created_at').order('created_at', { ascending: false });
+      if (error) throw error;
+      document.getElementById('stat-recipes').textContent = data.length;
+      if (!data.length) { panel.innerHTML = `<div class="empty"><div class="ico">🍽️</div><p>No saved recipes yet.</p></div>`; return; }
+      panel.innerHTML = `<div class="rec-grid">${data.map(row => {
+        const r = row.recipe_data || {};
+        return `<div class="rec-card">
+          <div class="rec-name">${esc(r.name || 'Untitled')}</div>
+          <div class="rec-meta">
+            ${r.cuisine ? `<span>🌍 ${esc(r.cuisine)}</span>` : ''}
+            ${r.difficulty ? `<span>📊 ${esc(r.difficulty)}</span>` : ''}
+            ${r.time ? `<span>⏱ ${esc(r.time)}</span>` : ''}
+            ${r.calories ? `<span>🔥 ${esc(r.calories)} kcal</span>` : ''}
+            ${r.protein ? `<span>💪 ${esc(r.protein)}g</span>` : ''}
+          </div>
+          ${r.description ? `<div class="rec-desc">${esc(r.description)}</div>` : ''}
+        </div>`;
+      }).join('')}</div>`;
+    } catch (e) { panel.innerHTML = `<div class="empty"><p>Couldn't load recipes.</p></div>`; showError(e.message || 'Access denied'); }
+  }
+
+  async function loadPantry() {
+    const panel = document.getElementById('panel-pantry');
+    try {
+      const { data, error } = await sb.from('pantry').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      document.getElementById('stat-pantry').textContent = data.length;
+      if (!data.length) { panel.innerHTML = `<div class="empty"><div class="ico">🥫</div><p>No pantry items yet.</p></div>`; return; }
+      const groups = { food: '🍎 Foods', ingredient: '🧂 Ingredients', marinade: '🫙 Marinades' };
+      panel.innerHTML = Object.entries(groups).map(([type, label]) => {
+        const items = data.filter(p => p.item_type === type);
+        if (!items.length) return '';
+        return `<div style="margin-bottom:18px">
+          <div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin-bottom:8px">${label}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            ${items.map(p => `<span style="background:var(--orange-pale);color:var(--orange);border:1.5px solid rgba(232,101,10,.25);border-radius:999px;padding:6px 14px;font-size:.85rem;font-weight:500">${esc(p.name)}</span>`).join('')}
+          </div></div>`;
+      }).join('');
+    } catch (e) { panel.innerHTML = `<div class="empty"><p>Couldn't load pantry.</p></div>`; showError(e.message || 'Access denied'); }
+  }
+
+  // Auto-unlock if key already stored
+  const saved = localStorage.getItem('chefly_admin_key');
+  if (saved) start(saved);
+</script>
+</body>
+</html>
