@@ -461,17 +461,40 @@
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
   window.addEventListener('scroll', () => {
     document.querySelector('nav').style.boxShadow = window.scrollY > 20 ? '0 2px 20px rgba(0,0,0,.08)' : 'none';
   });
 
-  function submitForm() {
+  // ── Supabase (contact messages) ──
+  const SUPABASE_URL = 'https://ffasbkljsvjebsqvhhuz.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable__0KsOiZ4GyvLQm2QFR01Ng__9H-1A0C';
+  let sb = null;
+  try { sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_KEY); } catch (e) { console.warn('Supabase init failed', e); }
+
+  async function submitForm() {
     const name    = document.getElementById('form-name').value.trim();
     const email   = document.getElementById('form-email').value.trim();
+    const subject = document.getElementById('form-subject').value;
     const message = document.getElementById('form-message').value.trim();
     if (!name || !email || !message) { alert('Please fill in your name, email, and message.'); return; }
     if (!email.includes('@')) { alert('Please enter a valid email address.'); return; }
+
+    const btn = document.querySelector('.form-submit');
+    btn.disabled = true; btn.textContent = 'Sending...';
+
+    if (sb) {
+      try {
+        const { error } = await sb.from('contact_messages').insert({ name, email, subject, message });
+        if (error) throw error;
+      } catch (e) {
+        console.warn('Contact save failed', e);
+        btn.disabled = false; btn.textContent = 'Send Message →';
+        alert('Sorry, something went wrong sending your message. Please email us directly at noyandehdar20@gmail.com.');
+        return;
+      }
+    }
     document.getElementById('contact-form-body').style.display = 'none';
     document.getElementById('form-success').style.display = 'block';
   }

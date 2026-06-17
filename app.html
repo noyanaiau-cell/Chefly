@@ -514,7 +514,48 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+// ── Supabase (cloud cookbook) ──
+const SUPABASE_URL = 'https://ffasbkljsvjebsqvhhuz.supabase.co';
+const SUPABASE_KEY = 'sb_publishable__0KsOiZ4GyvLQm2QFR01Ng__9H-1A0C';
+let sb = null;
+try { sb = window.supabase?.createClient(SUPABASE_URL, SUPABASE_KEY); } catch (e) { console.warn('Supabase init failed', e); }
+
+// Stable anonymous session id so each browser keeps its own cloud cookbook
+let cheflySession = localStorage.getItem('chefly_session');
+if (!cheflySession) {
+  cheflySession = (crypto.randomUUID ? crypto.randomUUID() : 'sess-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+  localStorage.setItem('chefly_session', cheflySession);
+}
+
+async function cloudLoadFavourites() {
+  if (!sb) return;
+  try {
+    const { data, error } = await sb.from('cookbook')
+      .select('recipe_data, created_at')
+      .eq('session_id', cheflySession)
+      .order('created_at', { ascending: true });
+    if (error) throw error;
+    if (data) {
+      favourites = data.map(row => row.recipe_data);
+      localStorage.setItem('chefly_favs', JSON.stringify(favourites));
+      updateCookbookBadge();
+      if (document.getElementById('screen-5').classList.contains('active')) renderCookbook();
+    }
+  } catch (e) { console.warn('Cloud cookbook load failed, using local copy', e); }
+}
+async function cloudSaveFavourite(recipe) {
+  if (!sb) return;
+  try { await sb.from('cookbook').insert({ session_id: cheflySession, recipe_data: recipe }); }
+  catch (e) { console.warn('Cloud save failed', e); }
+}
+async function cloudRemoveFavourite(name) {
+  if (!sb) return;
+  try { await sb.from('cookbook').delete().eq('session_id', cheflySession).eq('recipe_data->>name', name); }
+  catch (e) { console.warn('Cloud remove failed', e); }
+}
+
 const state = {
   apiKey: localStorage.getItem('chefly_key') || '',
   ingredients: [], cuisine: 'Any', healthyMode: false,
@@ -529,6 +570,7 @@ const surpriseCuisines = ['Italian','Japanese','Mexican','Indian','American','Th
 
 if (state.apiKey) document.getElementById('api-modal').classList.add('hidden');
 updateCookbookBadge();
+cloudLoadFavourites();
 document.getElementById('cookbook-back-btn').onclick = () => goToScreen(state.cookbookFrom);
 
 function saveApiKey() {
@@ -675,16 +717,16 @@ function renderRecipes(recipes) {
 function isFavourite(name) { return favourites.some(f => f.name === name); }
 function toggleFavourite(idx) {
   const r = state.recipes[idx];
-  if (isFavourite(r.name)) { favourites = favourites.filter(f => f.name !== r.name); showToast('Removed from Cookbook'); }
-  else { favourites.push({...r, savedAt:Date.now()}); showToast('❤️ Saved to My Cookbook!'); }
+  if (isFavourite(r.name)) { favourites = favourites.filter(f => f.name !== r.name); cloudRemoveFavourite(r.name); showToast('Removed from Cookbook'); }
+  else { const saved = {...r, savedAt:Date.now()}; favourites.push(saved); cloudSaveFavourite(saved); showToast('❤️ Saved to My Cookbook!'); }
   localStorage.setItem('chefly_favs', JSON.stringify(favourites)); updateCookbookBadge();
   const btn = document.querySelectorAll('.heart-btn')[idx];
   if (btn) btn.classList.toggle('active', isFavourite(r.name));
 }
 function toggleFavouriteDetail() {
   const r = state.currentRecipe; if (!r) return;
-  if (isFavourite(r.name)) { favourites = favourites.filter(f => f.name !== r.name); showToast('Removed from Cookbook'); }
-  else { favourites.push({...r, savedAt:Date.now()}); showToast('❤️ Saved to My Cookbook!'); }
+  if (isFavourite(r.name)) { favourites = favourites.filter(f => f.name !== r.name); cloudRemoveFavourite(r.name); showToast('Removed from Cookbook'); }
+  else { const saved = {...r, savedAt:Date.now()}; favourites.push(saved); cloudSaveFavourite(saved); showToast('❤️ Saved to My Cookbook!'); }
   localStorage.setItem('chefly_favs', JSON.stringify(favourites)); updateCookbookBadge(); updateDetailHeart();
 }
 function updateDetailHeart() {
@@ -733,6 +775,7 @@ function cookFromCookbook(name) {
 }
 function removeFromCookbook(name) {
   favourites = favourites.filter(f => f.name !== name);
+  cloudRemoveFavourite(name);
   localStorage.setItem('chefly_favs', JSON.stringify(favourites));
   updateCookbookBadge(); renderCookbook(); showToast('Removed from Cookbook');
 }
