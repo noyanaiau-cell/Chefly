@@ -333,15 +333,16 @@
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
-<!-- API Modal -->
-<div class="modal-overlay" id="api-modal">
+<!-- API Modal (optional — recipes work without a key via the hosted backend) -->
+<div class="modal-overlay hidden" id="api-modal">
   <div class="modal">
-    <div style="font-size:2.5rem;margin-bottom:12px">👨‍🍳</div>
-    <h2>Welcome to Chefly</h2>
-    <p>Enter your <strong>Anthropic API key</strong> to get AI-powered recipes. It stays in your browser only.</p>
+    <div style="font-size:2.5rem;margin-bottom:12px">🔑</div>
+    <h2>Use your own API key</h2>
+    <p>Optional — Chefly already generates recipes for you. Power users can plug in their own <strong>Anthropic API key</strong> to use their own account. It stays in this browser only.</p>
     <input type="password" id="api-key-input" placeholder="sk-ant-..." />
-    <button class="btn btn-primary btn-full" onclick="saveApiKey()">Start Cooking →</button>
-    <p class="modal-note">Get a free key at <strong>console.anthropic.com</strong></p>
+    <button class="btn btn-primary btn-full" onclick="saveApiKey()">Save key</button>
+    <button class="btn btn-secondary btn-full" style="margin-top:10px" onclick="document.getElementById('api-modal').classList.add('hidden')">Close</button>
+    <p class="modal-note">Get a key at <strong>console.anthropic.com</strong></p>
   </div>
 </div>
 
@@ -638,7 +639,6 @@ let favourites = JSON.parse(localStorage.getItem('chefly_favs') || '[]');
 const cuisineFlags = { Italian:'🇮🇹', Japanese:'🇯🇵', Mexican:'🇲🇽', Indian:'🇮🇳', American:'🇺🇸', Any:'🌍', Thai:'🇹🇭', Greek:'🇬🇷', French:'🇫🇷', Korean:'🇰🇷', Spanish:'🇪🇸' };
 const surpriseCuisines = ['Italian','Japanese','Mexican','Indian','American','Thai','Greek','French','Korean','Spanish'];
 
-if (state.apiKey) document.getElementById('api-modal').classList.add('hidden');
 updateCookbookBadge();
 cloudLoadFavourites();
 cloudLoadPantry();
@@ -753,7 +753,6 @@ function selectCuisine(el) {
 
 // Screen 3
 function goToRecipes() {
-  if (!state.apiKey) { showApiModal(); return; }
   goToScreen(3); fetchRecipes();
 }
 async function fetchRecipes() {
@@ -1001,6 +1000,25 @@ async function fetchSteps() {
   }
 }
 async function claudeCall(systemPrompt, userMessage) {
+  // 1) Preferred: hosted backend — recipes work for everyone, no key needed.
+  let backendErr = null;
+  try {
+    const res = await fetch('/api/claude', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ system: systemPrompt, message: userMessage, max_tokens: 2048 }),
+    });
+    if (res.ok) return (await res.json()).text;
+    const err = await res.json().catch(() => ({}));
+    backendErr = new Error(err.error || `Recipe service error ${res.status}`);
+  } catch (e) {
+    backendErr = new Error('Could not reach the recipe service.');
+  }
+  // 2) Fallback: visitor's own key (local testing / personal override).
+  if (state.apiKey) return claudeDirect(systemPrompt, userMessage);
+  throw backendErr;
+}
+async function claudeDirect(systemPrompt, userMessage) {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'Content-Type':'application/json', 'x-api-key': state.apiKey, 'anthropic-version':'2023-06-01', 'anthropic-dangerous-direct-browser-access':'true' },
