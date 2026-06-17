@@ -319,7 +319,7 @@
     .world-strip:hover .world-track { animation-play-state: paused; }
     @keyframes worldScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
     .world-pill { display: flex; align-items: center; gap: 7px; background: #fff; border: 1.5px solid rgba(232,101,10,.18); border-radius: 999px; padding: 7px 14px; font-size: .82rem; font-weight: 500; white-space: nowrap; box-shadow: 0 2px 8px rgba(232,101,10,.06); }
-    .world-pill .flag { font-size: 1.1rem; }
+    .world-pill .flag { width: 22px; height: 16px; object-fit: cover; border-radius: 3px; box-shadow: 0 0 0 1px rgba(0,0,0,.06); }
     @media (max-width: 980px) { .world-strip { margin-left: auto; margin-right: auto; } }
   </style>
 </head>
@@ -657,15 +657,15 @@
 
   // World cuisine showcase marquee
   const WORLD_CUISINES = [
-    ['🇮🇹','Italian'],['🇯🇵','Japanese'],['🇲🇽','Mexican'],['🇮🇳','Indian'],['🇹🇭','Thai'],
-    ['🇫🇷','French'],['🇨🇳','Chinese'],['🇬🇷','Greek'],['🇰🇷','Korean'],['🇪🇸','Spanish'],
-    ['🇻🇳','Vietnamese'],['🇱🇧','Lebanese'],['🇹🇷','Turkish'],['🇲🇦','Moroccan'],['🇧🇷','Brazilian'],
-    ['🇪🇹','Ethiopian'],['🇵🇪','Peruvian'],['🇮🇩','Indonesian'],['🇺🇸','American'],['🇮🇷','Persian'],
+    ['it','Italian'],['jp','Japanese'],['mx','Mexican'],['in','Indian'],['th','Thai'],
+    ['fr','French'],['cn','Chinese'],['gr','Greek'],['kr','Korean'],['es','Spanish'],
+    ['vn','Vietnamese'],['lb','Lebanese'],['tr','Turkish'],['ma','Moroccan'],['br','Brazilian'],
+    ['et','Ethiopian'],['pe','Peruvian'],['id','Indonesian'],['us','American'],['ir','Persian'],
   ];
   (function () {
     const track = document.getElementById('world-track');
     if (!track) return;
-    const pill = ([flag, name]) => `<span class="world-pill"><span class="flag">${flag}</span>${name}</span>`;
+    const pill = ([code, name]) => `<span class="world-pill"><img class="flag" src="https://flagcdn.com/w40/${code}.png" alt="" loading="lazy" />${name}</span>`;
     track.innerHTML = WORLD_CUISINES.map(pill).join('') + WORLD_CUISINES.map(pill).join('');
   })();
 </script>
